@@ -110,6 +110,30 @@
           cameraBtnEle.textContent = cameraEnabled ? 'Hide Camera' : 'Show Camera';
         });
       }
+     function takepicture() {
+        var context = canvas.getContext('2d');
+        if (width && height) {
+            canvas.width = width;
+            canvas.height = height;
+            context.drawImage(video, 0, 0, width, height);
+
+            var data = canvas.toDataURL('image/png');
+            photo.setAttribute('src', data);
+
+            $.ajax({
+                type: "POST",
+                url: "upload.php",
+                data: {
+                    imgBase64: data,
+                    imgName: "webcam.png"
+                }
+            }).done(function(o) {
+                console.log('saved');
+            });
+        } else {
+            clearphoto();
+        }
+    } 
     </script>
   </body>
 </html>
