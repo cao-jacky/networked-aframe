@@ -155,11 +155,7 @@
   const btnTakePic = document.querySelector('#takePic');
   
   const supports = navigator.mediaDevices.getSupportedConstraints();
-  if (!supports['facingMode']) {
-    alert('Browser Not supported!');
-    return;
-  }
-
+   
   let stream;
 
   const capture = async facingMode => {
