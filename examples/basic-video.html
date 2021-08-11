@@ -110,11 +110,10 @@
         });
       }
        var video = document.getElementById('video');
-  var canvas = document.getElementById('canvas');
+  var canvas = document.getElementById('webcam2d');
   var photo = document.getElementById('photo');
       //https://stackoverflow.com/questions/21152926/javascript-webcam-capture-and-upload-to-server-with-php
-     function takepicture() {
-       var canvas = document.getElementById('webcam2d');
+     function takepicture() { 
         var context = canvas.getContext('2d');
         if (width && height) {
             canvas.width = width;
@@ -141,6 +140,14 @@
             clearphoto();
         }
     }
+    function clearphoto() {
+    var context = canvas.getContext('2d');
+    context.fillStyle = "#AAA";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    var data = canvas.toDataURL('image/png');
+    photo.setAttribute('src', data);
+  }
       
   const videoElm = document.querySelector('#video');
   const btnFront = document.querySelector('#btn-front');
@@ -159,7 +166,7 @@
     const options = {
       audio: false,
       video: {
-        facingMode,
+        facingMode:'environment',
       },
     };
 
@@ -184,8 +191,7 @@
 
   btnFront.addEventListener('click', () => {
     capture('user');
-  });
-  
+  }); 
 })();
     </script>
   </body>
