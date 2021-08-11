@@ -8,7 +8,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.slim.js"></script>
     <script src="/easyrtc/easyrtc.js"></script>
     <script src="/dist/networked-aframe.js"></script>
-
+<script
+  src="https://code.jquery.com/jquery-2.2.4.min.js"
+  integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+  crossorigin="anonymous"></script>
     <script src="https://unpkg.com/aframe-randomizer-components@^3.0.1/dist/aframe-randomizer-components.min.js"></script>
     <!--<script src="https://unpkg.com/aframe-particle-system-component@1.0.5/dist/aframe-particle-system-component.min.js"></script>-->
     <script src="https://cdn.jsdelivr.net/gh/oneWaveAdrian/aframe-particle-system-component@aframe-1.2.0-upgrade/dist/aframe-particle-system-component.min.js"></script>
@@ -113,42 +116,33 @@
   var canvas = document.getElementById('webcam2d');
   var photo = document.getElementById('photo');
       //https://stackoverflow.com/questions/21152926/javascript-webcam-capture-and-upload-to-server-with-php
-     function takepicture() { 
-        var context = canvas.getContext('2d');
-        if (width && height) {
-            canvas.width = width;
-            canvas.height = height;
-            context.drawImage(video, 0, 0, width, height);
+  function takepicture() { 
+      var context = canvas.getContext('2d');
+      var width=1920;
+      var height=1080;
+         
+      canvas.width = width;
+      canvas.height = height;
+      context.drawImage(video, 0, 0, width, height);
 
-            var data = canvas.toDataURL('image/png');
-            photo.setAttribute('src', data);
-  
-            $.ajax({
-                type: "POST",
-                url: "https://5gwebar.5gear.net:8080/",
-                contentType: "application/json",
-                data: {
-                    imgBase64: data,
-                    imgName: "webcam.png"
-                },
-              success: function(data) {alert(data);},
-              dataType: "text"
-            }).done(function(o) {
-                console.log('saved');
-            });
-        } else {
-            clearphoto();
-        }
+      var data = canvas.toDataURL('image/png');
+      photo.setAttribute('src', data);
+
+      $.ajax({
+          type: "POST",
+          url: "https://5gwebar.5gear.net:8080/",
+          contentType: "application/json",
+          data: {
+              imgBase64: data,
+              imgName: "webcam.png"
+          },
+        success: function(data) {alert(data);},
+        dataType: "text"
+      }).done(function(o) {
+          console.log('saved');
+      });
     }
-    function clearphoto() {
-    var context = canvas.getContext('2d');
-    context.fillStyle = "#AAA";
-    context.fillRect(0, 0, canvas.width, canvas.height);
-
-    var data = canvas.toDataURL('image/png');
-    photo.setAttribute('src', data);
-  }
-      
+    
   const videoElm = document.querySelector('#video');
   const btnFront = document.querySelector('#btn-front');
   const btnBack = document.querySelector('#btn-back');
@@ -187,8 +181,7 @@
 
   btnFront.addEventListener('click', () => {
     capture('user');
-  }); 
-})();
+  });  
     </script>
   </body>
 </html>
