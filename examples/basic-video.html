@@ -127,15 +127,22 @@
       photo.setAttribute('src', data);
 
       $.ajax({
-          type: "POST",
+      	  type: "POST",
           url: "https://5gwebar.5gear.net:8080/",
           contentType: "application/json",
-          data: {
+          data: JSON.stringify({
               imgBase64: data,
               imgName: "webcam.png"
-          },
-        success: function(data) {alert(data);},
-        dataType: "text"
+          }),
+	  dataType: 'json',
+	  error: function() {
+	      // alert("error");    
+	      console.log('error');	
+	  },
+          success: function() {
+	      // alert("sent");
+	      console.log('sent');
+	  },
       }).done(function(o) {
           console.log('saved');
       });
