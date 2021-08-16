@@ -29,6 +29,7 @@
   "repository": "networked-aframe/networked-aframe",
   "dependencies": {
     "buffered-interpolation": "^0.2.5",
+    "cors": "^2.8.5",
     "express": "^4.17.1",
     "open-easyrtc": "^2.0.5",
     "socket.io": "^2.3.0"
