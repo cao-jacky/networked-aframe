@@ -1,0 +1,192 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Video Streaming Example — Networked-Aframe</title>
+    <meta name="description" content="Dev Example — Networked-Aframe">
+
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.slim.js"></script>
+    <script src="/easyrtc/easyrtc.js"></script>
+    <script src="/dist/networked-aframe.js"></script>
+<script
+  src="https://code.jquery.com/jquery-2.2.4.min.js"
+  integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+  crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/aframe-randomizer-components@^3.0.1/dist/aframe-randomizer-components.min.js"></script>
+    <!--<script src="https://unpkg.com/aframe-particle-system-component@1.0.5/dist/aframe-particle-system-component.min.js"></script>-->
+    <script src="https://cdn.jsdelivr.net/gh/oneWaveAdrian/aframe-particle-system-component@aframe-1.2.0-upgrade/dist/aframe-particle-system-component.min.js"></script>
+    <script src="/js/spawn-in-circle.component.js"></script>
+  </head>
+  <body>
+    <a-scene networked-scene="
+      room: basic-video;
+      debug: true;
+      adapter: easyrtc; 
+    ">
+      <a-assets>
+
+        <img id="grid" src="https://img.gs/bbdkhfbzkk/stretch/https://i.imgur.com/25P1geh.png" crossorigin="anonymous">
+        <img id="sky" src="https://i.imgur.com/WqlqEkq.jpg" crossorigin="anonymous" />
+
+        <!-- Templates -->
+
+        <!-- Avatar -->
+        <template id="avatar-template">
+          <a-entity class="avatar">
+             <a-plane  color="#FFF" width="4" height="3" position="0 .6 0"  material="side: front" networked-video-source></a-plane>
+             <a-plane  color="#FFF" width="4" height="3" position="0 .6 0"  material="side: back" networked-video-source></a-plane>
+          </a-entity>
+        </template>
+
+        <!-- /Templates -->
+      </a-assets>
+
+      <a-entity id="player"
+        networked="template:#avatar-template;attachTemplateToLocal:false;"
+        camera
+        position="0 1.6 0"
+        spawn-in-circle="radius:3"
+        wasd-controls look-controls
+        >
+        <a-sphere class="head"
+          visible="false"
+          random-color
+        ></a-sphere>
+      </a-entity>
+
+      <a-entity position="0 0 0"
+        geometry="primitive: plane; width: 10000; height: 10000;" rotation="-90 0 0"
+        material="src: #grid; repeat: 10000 10000; transparent: true; metalness:0.6; roughness: 0.4; sphericalEnvMap: #sky;"></a-entity>
+
+      <a-entity light="color: #ccccff; intensity: 1; type: ambient;" visible=""></a-entity>
+      <a-entity light="color: #ffaaff; intensity: 1.5" position="5 5 5"></a-entity>
+ 
+      <a-entity id="particles" particle-system="preset: snow"></a-entity>
+    </a-scene> 
+   <img id="photo" class="photoview" alt="The screen capture will appear in this box.">
+    <button id="camera-btn" type="button" class="camera-btn">Hide Cam</button>
+    <button id="btn-front" class="camera-btn">Front</button>
+    <button id="btn-back" class="camera-btn">Back</button>
+    <button id="takePic" class="camera-btn" onclick="takepicture()">Take Pic</button>
+    <canvas id="webcam2d" width="150" height="150"></canvas>
+    <video id="video" style="display:none;"> </video>
+     
+    <style>.photoview{position:absolute;bottom:15%;left:3%;height:108px;width:192px;}.camera-btn{position:relative;cursor:pointer;bottom:8%;left:3%;background:#fff;height:30px;width:90px;border-radius:10px}
+    </style>
+
+    <script>
+      // Camera status
+      let cameraEnabled = true;
+      // Camera button ele
+      const cameraBtnEle = document.getElementById('camera-btn');
+
+      // On mobile remove elements that are resource heavy
+      const isMobile = AFRAME.utils.device.isMobile();
+
+      if (isMobile) {
+        const particles = document.getElementById('particles');
+        particles.parentNode.removeChild(particles);
+      }
+    </script>
+
+    <script>
+      // Define custom schema for syncing avatar color, set by random-color
+      NAF.schemas.add({
+        template: '#avatar-template',
+        components: [        
+          'position',
+          'rotation'
+        ]
+      });
+
+      // Called by Networked-Aframe when connected to server
+      function onConnect () {
+        console.log("onConnect", new Date());
+
+        // Handle camera button click (Off and On)
+        cameraBtnEle.addEventListener('click', function() {
+          NAF.connection.adapter.enableCamera(!cameraEnabled);
+          cameraEnabled = !cameraEnabled;
+          cameraBtnEle.textContent = cameraEnabled ? 'Hide Cam' : 'Show Cam';
+        });
+      }
+       var video = document.getElementById('video');
+  var canvas = document.getElementById('webcam2d');
+  var photo = document.getElementById('photo');
+      //https://stackoverflow.com/questions/21152926/javascript-webcam-capture-and-upload-to-server-with-php
+  function takepicture() { 
+      var context = canvas.getContext('2d');
+      var width=1920;
+      var height=1080;
+         
+      canvas.width = width;
+      canvas.height = height;
+      context.drawImage(video, 0, 0, width, height);
+
+      var data = canvas.toDataURL('image/png');
+      photo.setAttribute('src', data);
+
+      $.ajax({
+      	  type: "POST",
+          url: "https://5gwebar.5gear.net:8080/facialverification/",
+          contentType: "application/json",
+          data: JSON.stringify({
+              imgBase64: data,
+              imgName: "webcam.png"
+          }),
+	  dataType: 'json',
+	  error: function() {
+	      // alert("error");    
+	      console.log('error');	
+	  },
+          success: function() {
+	      // alert("sent");
+	      console.log('sent');
+	  },
+      }).done(function(o) {
+          console.log('saved');
+      });
+    }
+    
+  const videoElm = document.querySelector('#video');
+  const btnFront = document.querySelector('#btn-front');
+  const btnBack = document.querySelector('#btn-back');
+  const btnTakePic = document.querySelector('#takePic');
+  
+  const supports = navigator.mediaDevices.getSupportedConstraints();
+   
+  let stream;
+
+  const capture = async facingMode => {
+    const options = {
+      audio: false,
+      video: {
+        facingMode:'user',
+      },
+    };
+
+    try {
+      if (stream) {
+        const tracks = stream.getTracks();
+        tracks.forEach(track => track.stop());
+      }
+      stream = await navigator.mediaDevices.getUserMedia(options);
+    } catch (e) {
+      alert(e);
+      return;
+    }
+    videoElm.srcObject = null;
+    videoElm.srcObject = stream;
+    videoElm.play();
+  }
+
+  btnBack.addEventListener('click', () => {
+    capture('environment');
+  });
+
+  btnFront.addEventListener('click', () => {
+    capture('user');
+  });  
+    </script>
+  </body>
+</html>
