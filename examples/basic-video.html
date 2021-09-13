@@ -60,6 +60,7 @@
         <a-entity id="player"
                   networked="template:#avatar-template;attachTemplateToLocal:false;"
                   camera
+                  rotation-reader
                   position="0 1.6 0"
                   spawn-in-circle="radius:3"
                   wasd-controls
@@ -151,19 +152,17 @@
         var video = document.getElementById("video");
         var canvas = document.getElementById("webcam2d");
         var photo = document.getElementById("photo");
-
+        var CAMposition = new THREE.Vector3();
+        var CAMquaternion = new THREE.Quaternion();
         AFRAME.registerComponent('rotation-reader', {
             /**
              * We use IIFE (immediately-invoked function expression) to only allocate one
              * vector or euler and not re-create on every tick to save memory.
              */
             tick: (function () {
-                var position = new THREE.Vector3();
-                var quaternion = new THREE.Quaternion();
-
                 return function () {
-                    this.el.object3D.getWorldPosition(position);
-                    this.el.object3D.getWorldQuaternion(quaternion);
+                    this.el.object3D.getWorldPosition(CAMposition);
+                    this.el.object3D.getWorldQuaternion(CAMposition);
                     // position and rotation now contain vector and quaternion in world space.
                 };
             })()
@@ -226,8 +225,7 @@
         }
         function serverReturnProcess(result) {
             for (var k in result) {
-                alert(result["payload"]);
-                // alert(result);
+                alert(k);
                 var entityEl = document.createElement("a-entity");
                 entityEl.setAttribute("geometry", {
                     primitive: "box",
@@ -239,14 +237,13 @@
                 sceneEl.camera.getWorldDirection(direction);
                 // multiply the direction by a "speed" factor
                 direction.multiplyScalar(0.1)
-                // get the current position
-                var pos = player.getAttribute("position")
+                // get the current position 
                 // add the direction vector
-                pos.add(direction)
+                CAMposition.add(direction)
                 // set the new position
                 //player.setAttribute("position", pos);
 
-                entityEl.setAttribute("position", pos);
+                entityEl.setAttribute("position", CAMposition);
                 //entityEl.setAttribute('position', {x: result[k].x, y: result[k].y, z: 0});
                 // Do `.setAttribute()`s to initialize the entity.
                 sceneEl.appendChild(entityEl);
