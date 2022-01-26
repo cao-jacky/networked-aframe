@@ -28,6 +28,7 @@
   },
   "repository": "networked-aframe/networked-aframe",
   "dependencies": {
+    "aframe-arrow-component": "^1.0.0",
     "buffered-interpolation": "^0.2.5",
     "cors": "^2.8.5",
     "express": "^4.17.1",

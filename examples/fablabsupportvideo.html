@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Image based tracking AR.js demo</title>
+    <!-- import aframe and then ar.js with image tracking / location based features -->
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.slim.js"></script>
+    <script src="/easyrtc/easyrtc.js"></script>
+    <script src="/dist/networked-aframe.js"></script>
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"
+            integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+            crossorigin="anonymous"></script>
+    <script src="https://rawgit.com/jeromeetienne/ar.js/master/aframe/build/aframe-ar.js"></script>
+    <script>THREEx.ArToolkitContext.baseURL = 'https://5gwebar.5gear.net:8443/three.js/'</script>
+
+    <script src="https://unpkg.com/aframe-randomizer-components@^3.0.1/dist/aframe-randomizer-components.min.js"></script>
+    <script src="https://unpkg.com/aframe-button-controls@^1.1.0/aframe-button-controls.js"></script>
+    <script src="/js/spawn-in-circle.component.js"></script>
+    <!-- style for the loader -->
+    <link rel="stylesheet" href="fabstyle.css" type="text/css" media="all">
+
+    <script>
+        function onARConnect() {
+            console.log('AR Client Connected');
+        }
+    </script>
+    <style>
+        #arjs-video {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- a-frame scene -->
+    <a-scene arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+             network-scene="room: dev; debug: true; adapter: easyrtc;  ">
+        <a-assets>
+            <img id="arrowImg"
+                 src="arrow.png" />
+            <template id="avatar-template">
+                <a-entity class="avatar">
+                    <a-entity class="avatar">
+                        <a-plane color="#FFF" width="4" height="3" position="0 .4 -1.7" rotation="0 0 0" material="side: front" networked-video-source></a-plane>
+                        <a-plane color="#FFF" width="4" height="3" position="0 .4 -1.7" rotation="0 0 0" material="side: back" networked-video-source></a-plane>
+                    </a-entity>
+                </a-entity>
+            </template>
+            <template id="marker-template">
+                <a-entity material="color: red"
+                          rotation="270 0 0"
+                          text="xOffset:7; width:13;">
+                    <a-text align="left" class="aentitiyblock" width="7" value="Wait for support" color="green"></a-text>
+                    <a-image src="#arrowImg" position="-0.5 0 0" width="1" height="1"></a-image>
+                </a-entity>
+
+                <!-- static camera that moves according to the device movemenents -->
+            </template>
+        </a-assets>
+        <a-entity button-controls></a-entity>
+
+        <a-entity id="player"
+                  networked="template:#avatar-template;attachTemplateToLocal:false;"
+                  camera
+                  rotation-reader
+                  position="0 1.6 0"
+                  look-controls>
+
+            <a-marker type="barcode" size="0.06" value="0" id="ftextA" registerevents>
+                <a-entity networked="template:#marker-template">
+                </a-entity>
+            </a-marker>
+            <a-marker type="barcode" size="0.06" value="1" id="stextA" registerevents>
+                <a-entity networked="template:#marker-template">
+                </a-entity>
+            </a-marker>
+            <a-marker type="barcode" size="0.06" value="10" id="ttextA" registerevents>
+                <a-entity networked="template:#marker-template">
+                </a-entity>
+            </a-marker>
+        </a-entity>
+
+        <a-nft type="nft"
+               url="https://5gwebar.5gear.net:8443/nft/fablablogo"
+               smooth="true"
+               smoothCount="10"
+               smoothTolerance=".01"
+               smoothThreshold="5">
+            <!-- as a child of the a-nft entity, you can define the content to show. here's a GLTF model entity -->
+            <a-entity gltf-model="toonthumbsup/scene.gltf"
+                      scale="1 1 1"
+                      position="0 0 0">
+                <a-text id="forthtextA" value="Work Done! Please take your material out of engraving area" negate="false" scale="2 2 1" position="1 0 0"></a-text>
+            </a-entity>
+        </a-nft>
+    </a-scene>
+
+    <button id="mic-btn" type="button" class="camera-btn">Mute Mic</button>
+    <button id="camera-btn" type="button" class="camera-btn">Hide Cam</button>
+    <canvas id="webcam2d" width="1920" height="1080"></canvas>
+    <div class="photoview vr-overlay-content">
+
+
+        <form id="editTextForm">
+            <label for="ftext">First tag:</label>
+            <input type="text" onchange="UpdateText(this.id)" id="ftext" name="ftext" value="Open the cover to start"><br><br>
+            <label for="stext">Second tag:</label>
+            <input type="text" onchange="UpdateText(this.id)" id="stext" name="stext" value="Put below this position"><br><br>
+            <label for="ttext">Third tag:</label>
+            <input type="text" onchange="UpdateText(this.id)" id="ttext" name="ttext" value="Close the cover"><br><br>
+            <input type="submit" value="Submit">
+        </form>
+    </div>
+    <script>
+        // Camera status
+        let cameraEnabled = true;
+        // Camera button ele
+        const micBtnEle = document.getElementById('mic-btn');
+        const cameraBtnEle = document.getElementById("camera-btn");
+        NAF.schemas.add({
+            template: '#avatar-template',
+            components: [
+                'position',
+                'rotation'
+            ]
+        });
+        function UpdateText(targetID) {
+            var strupdate = document.getElementById(targetID).value;
+            console.log(strupdate);
+            var fbtn = "#" + targetID + "A .aentitiyblock";
+            document.querySelector(fbtn).setAttribute('value', strupdate); 
+              
+            var element = document.getElementById(targetID + "A");
+            var elementHtml = element.innerHTML;
+            console.log(elementHtml);
+            $.ajax({
+                type: "POST",
+                url: "https://5gwebar.5gear.net:8080/support",
+                contentType: "application/json",
+                // data: {
+                //     id: markerId,
+                // },
+                // dataType: 'json',
+                data: JSON.stringify({
+                    markerId: markerId,
+                    elementml: elementHtml
+                }),
+                success: function (data) {
+                    //var t = JSON.parse(data);
+                    //    let nodes = getNodes(t['response']);
+                    //   marker.appendChild(nodes);
+                },
+                dataType: "text"
+            }).done(function (data) {
+                console.log("data" + data);
+            });
+        }
+
+        let getNodes = str => new DOMParser().parseFromString(str, 'text/html').body.childNodes;
+        AFRAME.registerComponent('UpdateText', {
+            init: function () {
+                var te = this.el;
+            }
+        });
+        AFRAME.registerComponent('registerevents', {
+            init: function () {
+                var marker = this.el;
+
+                // Make the element emit events when found and when lost.
+                marker.setAttribute('emitevents', 'true');
+
+                marker.addEventListener('markerFound', function () {
+                    var markerId = marker.id;
+                    console.log('markerFound', markerId);
+                    var fbtn = "#" + markerId + " .aentitiyblock";
+                    var targetID = markerId.substring(0, markerId.length - 1);
+                    var strupdate = document.getElementById(targetID).value;
+                    document.querySelector(fbtn).setAttribute('value', strupdate);
+                    var element = document.getElementById(markerId);
+                    var elementHtml = element.innerHTML;
+                    console.log(elementHtml);
+                    //
+                    $.ajax({
+                        type: "POST",
+                        url: "https://5gwebar.5gear.net:8080/support",
+                        contentType: "application/json",
+                        // data: {
+                        //     id: markerId,
+                        // },
+                        // dataType: 'json',
+                        data: JSON.stringify({
+                            markerId: markerId,
+                            elementml: elementHtml
+                        }),
+                        success: function (data) {
+                           // var t = JSON.parse(data); 
+                            //    let nodes = getNodes(t['response']);
+                            //   marker.appendChild(nodes);
+                        },
+                        dataType: "text"
+                    }).done(function (data) {
+                        console.log("data" + data);
+                    });
+                    // TODO: Add your own code here to react to the marker being found.
+                });
+
+                marker.addEventListener('markerLost', function () {
+                    var markerId = marker.id;
+                    console.log('markerLost', markerId);
+                    console.log("Marker Gone!");
+                    // TODO: Add your own code here to react to the marker being lost.
+                });
+            }
+        });
+        //var photo = document.getElementById("photo");
+        var mixedCanvas = document.getElementById("webcam2d");
+        var context = mixedCanvas.getContext("2d");
+        var img = new Image;
+        img.onload = function () {
+            context.drawImage(img, 0, 0); // Or at whatever offset you like
+        };
+        //var dataType = "p";
+        //NAF.connection.subscribeToDataChannel(dataType, sendScreenCallback)
+        //function sendScreenCallback(senderId, dataType, imgdata, targetId) {
+        //    photo.setAttribute("src", imgdata);
+        //  console.log("sendScreenCallback" + imgdata);
+        //}
+        function sendScreen() {
+            //  var width = 1920;
+            //  var height = 1080;
+            // canvas.width = width;
+            // canvas.height = height;
+            // var pixels = 4 * width * height;
+            //var aframedata = screencanvas.toDataURL("image/png");
+            //  var aframecontext = screencanvas.getContext("2d");
+            //var aframeimage1 = aframecontext.getImageData(0, 0, width, height);
+            //var aframeimageData2 = aframeimage1.data;
+            // var context = mixedCanvas.getContext("2d");
+            // context.drawImage(videoElement, 0, 0, width, height);
+            // context.drawImage(screencanvas, 0, 0, width, height);
+
+            //  var videoimage1 = context.getImageData(0, 0, width, height);
+            //  var imageData1 = videoimage1.data;
+            // var mixpng = mixedCanvas.toDataURL("image/png");
+
+            $.ajax({
+                type: "POST",
+                url: "https://5gwebar.5gear.net:8080/",
+                contentType: "application/json",
+                // data: {
+                //     id: markerId,
+                // },
+                // dataType: 'json',
+                data: JSON.stringify({
+                    markerId: "sc",
+                }),
+                success: function (data) {
+                    var t = JSON.parse(data);
+                    console.log(data);
+                    var htmlstr = JSON.parse(t['payload']);
+                    console.log(htmlstr['response']);
+                    //let nodes = getNodes(htmlstr['response']); 
+                   // context.drawImage(htmlstr['response'], 0, 0, width, height);
+                   
+                    img.src = htmlstr['response'];
+                   // photo.setAttribute("src", htmlstr['response']);
+                    //marker.appendChild(nodes);
+                },
+                dataType: "text"
+            }).done(function (data) {
+                console.log("data");
+            });
+        }
+        setInterval(sendScreen, 2000);
+ 
+    </script>
+</body>
+</html>
+

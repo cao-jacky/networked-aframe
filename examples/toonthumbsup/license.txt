@@ -1,0 +1,11 @@
+Model Information:
+* title:	Toon Thumbs Up
+* source:	https://sketchfab.com/3d-models/toon-thumbs-up-7ed5e53e3a484d80b8414adaa35ae6b9
+* author:	CzernO (https://sketchfab.com/czernobog)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Toon Thumbs Up" (https://sketchfab.com/3d-models/toon-thumbs-up-7ed5e53e3a484d80b8414adaa35ae6b9) by CzernO (https://sketchfab.com/czernobog) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
