@@ -4,19 +4,37 @@
     <title>Video Streaming Example — Networked-Aframe</title>
     <meta name="description" content="Dev Example — Networked-Aframe">
 
-    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <!-- <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script> -->
+    <script src="/js/aframe-master.js"></script>
+    <script src="/js/info-message.js"></script>
+    <script src="https://unpkg.com/aframe-environment-component@1.2.0/dist/aframe-environment-component.min.js"></script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.slim.js"></script>
     <script src="/easyrtc/easyrtc.js"></script>
-    <script src="/dist/networked-aframe.js"></script>
-<script
-  src="https://code.jquery.com/jquery-2.2.4.min.js"
-  integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
-  crossorigin="anonymous"></script>
+    <script src="/js/networked-aframe.js"></script>
+    
+    <script src="/js/pinchable.js"></script>
+    <script src="/js/color-change.js"></script>
+    <script src="/js/slider.js"></script>
+    <script src="/js/size-change.js"></script>
+    <script src="/js/button.js"></script>
+    <script src="/js/menu.js"></script>
+    <script src="/js/pressable.js"></script>
+    <script src="/js/event-manager.js"></script>
+
+    <script
+      src="https://code.jquery.com/jquery-2.2.4.min.js"
+      integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+      crossorigin="anonymous">
+    </script>
+
     <script src="https://unpkg.com/aframe-randomizer-components@^3.0.1/dist/aframe-randomizer-components.min.js"></script>
     <!--<script src="https://unpkg.com/aframe-particle-system-component@1.0.5/dist/aframe-particle-system-component.min.js"></script>-->
     <script src="https://cdn.jsdelivr.net/gh/oneWaveAdrian/aframe-particle-system-component@aframe-1.2.0-upgrade/dist/aframe-particle-system-component.min.js"></script>
     <script src="/js/spawn-in-circle.component.js"></script>
+  
   </head>
+
   <body>
     <a-scene networked-scene="
       room: basic-video;
@@ -37,6 +55,39 @@
              <a-plane  color="#FFF" width="4" height="3" position="0 .6 0"  material="side: back" networked-video-source></a-plane>
           </a-entity>
         </template>
+
+        <template id="boxGeometry">
+          <a-entity
+          position="0 2.0 -1"
+          rotation="45 45 0"
+          geometry="primitive: box; height: 0.6; width: 0.6; depth: 0.6"
+          material="color: #ff4b5c"
+          size-change
+          scale="0.5 0.5 0.5"></a-entity>
+        </template>
+      
+     <a-entity
+      id="torusGeometry"
+      position="0 2.0 -1"
+      rotation="45 45 0"
+      geometry="primitive: torus; radius: 0.4; radius-tubular: 0.06"
+      material="color: #d2e603"
+      size-change
+      visible="false"
+      scale="0.5 0.5 0.5"
+    ></a-entity>
+     <a-entity
+      id="sphereGeometry"
+      position="0 2.0 -1"
+      rotation="45 45 0"
+      geometry="primitive: sphere; radius: 0.6;"
+      material="color: #fcdab7"
+      size-change
+      visible="false"
+      scale="0.5 0.5 0.5"
+    ></a-entity>
+
+
 
         <!-- /Templates -->
       </a-assets>
@@ -60,9 +111,28 @@
 
       <a-entity light="color: #ccccff; intensity: 1; type: ambient;" visible=""></a-entity>
       <a-entity light="color: #ffaaff; intensity: 1.5" position="5 5 5"></a-entity>
+
+      <!-- "button" -->
+      <a-entity id="refresh-button" geometry="primitive: box" material="color: red" position="0 0 -2"></a>
  
       <a-entity id="particles" particle-system="preset: snow"></a-entity>
+
+      <a-entity networked="template:#boxGeometry;networkId:123;">
+      </a-entity>
+
+      <a-entity id="menu" menu position="0 1.5 -0.5" rotation="-45 0 0" event-manager>
+        <a-entity slider position="0 0.10 0"></a-entity>
+        <a-entity id="sphereButton" button="label: sphere" position="-0.15 0 0"></a-entity>
+        <a-entity id="boxButton" button="label: box" position="0 0 0"></a-entity>
+        <a-entity id="torusButton"button="label: torus" position="0.15 0 0"></a-entity>
+        <a-entity id="darkModeButton" button="label: Dark Mode; width: 0.20; toggable: true" position="0 -0.10 0"></a-entity>
+      </a-entity>
+
+
+      <a-entity hand-tracking-controls="hand: left"></a-entity>
+      <a-entity hand-tracking-controls="hand: right"></a-entit>
     </a-scene> 
+
    <img id="photo" class="photoview" alt="The screen capture will appear in this box.">
     <button id="camera-btn" type="button" class="camera-btn">Hide Cam</button>
     <button id="btn-front" class="camera-btn">Front</button>
@@ -110,9 +180,9 @@
           cameraBtnEle.textContent = cameraEnabled ? 'Hide Cam' : 'Show Cam';
         });
       }
-       var video = document.getElementById('video');
-  var canvas = document.getElementById('webcam2d');
-  var photo = document.getElementById('photo');
+      var video = document.getElementById('video');
+      var canvas = document.getElementById('webcam2d');
+      var photo = document.getElementById('photo');
       //https://stackoverflow.com/questions/21152926/javascript-webcam-capture-and-upload-to-server-with-php
   function takepicture() { 
       var context = canvas.getContext('2d');
@@ -128,7 +198,7 @@
 
       $.ajax({
       	  type: "POST",
-          url: "https://5gwebar.5gear.net:8080/facialverification/",
+          url: "https://130.231.168.165:8080/",
           contentType: "application/json",
           data: JSON.stringify({
               imgBase64: data,

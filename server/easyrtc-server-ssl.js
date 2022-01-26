@@ -38,8 +38,10 @@ if (process.env.NODE_ENV === "development") {
 
 // Start Express https server
 const webServer = https.createServer({
-	key:  fs.readFileSync("/etc/letsencrypt/live/5gwebar.5gear.net/privkey.pem"),
-    	cert: fs.readFileSync("/etc/letsencrypt/live/5gwebar.5gear.net/cert.pem")	
+	// key:  fs.readFileSync("/etc/letsencrypt/live/5gwebar.5gear.net/privkey.pem"),
+  // cert: fs.readFileSync("/etc/letsencrypt/live/5gwebar.5gear.net/cert.pem")	
+  key:  fs.readFileSync("key.pem"),
+  cert: fs.readFileSync("cert.pem")	
 }, app);
 
 // Start Socket.io so it attaches itself to Express server
