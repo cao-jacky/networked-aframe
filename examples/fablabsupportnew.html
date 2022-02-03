@@ -49,9 +49,9 @@
             <template id="marker-template">
                 <a-entity material="color: red"
                           rotation="270 0 0" text="xOffset:7; width:13;" position="0 0 -1">
-                    <a-text align="left" class="aentitiyblock" width="7" value="" color="green"></a-text>
+                    <a-text align="left" class="aentitiyblock" width="10" value="" color="green" font="exo2bold"></a-text>
                     <a-image class="imgMarker" src="#arrowImg" position="-0.5 0 0" width="1" height="1"></a-image>
-                    <a-video class="MarkerVideo" src="" transparent="true" width="1.6" height="0.9"></a-video> 
+                    <a-video class="MarkerVideo" src="https://5gwebar.5gear.net:8443/laser1.mp4" transparent="true" width="1.6" height="0.9" position="0 0.6 0"></a-video> 
                 </a-entity>
                 <!-- static camera that moves according to the device movemenents -->
             </template>
@@ -113,7 +113,7 @@
             <label for="ftext">Tag 1:</label>
             <input type="text" onchange="UpdateText(this.id)" id="ftext" name="ftext" class="updatetextfield" value="Open the cover to start">
             <div> 
-                <span class="clickShowInput" onmouseover="showInput(this)"><img src="img/image_icon.png"> <input class="hideInput updatetextfield" type="text" onchange="UpdatePic(this.id)" placeholder="Image URL" id="ftextp" name="ftextpic" value=""></span>
+                <span class="clickShowInput" onmouseover="showInput(this)"><img src="img/image_icon.png"> <input class="hideInput updatetextfield" type="text" onchange="UpdatePic(this.id)" placeholder="Image URL" id="ftextp" name="ftextpic" value="focus.png"></span>
                 <span class="clickShowInput" onmouseover="showInput(this)"><img src="img/videoicon.png"><input class="hideInput updatetextfield" type="text" onchange="UpdateVid(this.id)" placeholder="Video URL" id="ftextv" name="ftextpic" value=""></span>
             </div>
 
@@ -121,7 +121,7 @@
             <input type="text" onchange="UpdateText(this.id)" id="stext" name="stext" class="updatetextfield" value="Put below this position">
             <div>
                 <span class="clickToshowImg" onmouseover="showInput(this)">
-                    <img src="img/image_icon.png">  <input class="hideInput updatetextfield" type="text" onchange="UpdatePic(this.id)" id="stextp" name="stextp" placeholder="Image URL" value="">
+                    <img src="img/image_icon.png">  <input class="hideInput updatetextfield" type="text" onchange="UpdatePic(this.id)" id="stextp" name="stextp" placeholder="Image URL" value="joystick.png">
                 </span>
                 <span class="clickShowInput" onmouseover="showInput(this)">
                     <img src="img/videoicon.png"> <input class="hideInput updatetextfield" type="text" onchange="UpdateVid(this.id)" id="stextv" name="stextv" placeholder="Video URL" value="">
@@ -131,7 +131,7 @@
             <input type="text" onchange="UpdateText(this.id)" id="ttext" name="ttext" class="updatetextfield" value="Close the cover"><br><br>
             <div>
                 <span class="clickToshowImg" onmouseover="showInput(this)">
-                    <img src="img/image_icon.png"> <input type="text" class="hideInput updatetextfield" onchange="UpdatePic(this.id)" id="ttextp" placeholder="Image URL" name="ttextp" value="">
+                    <img src="img/image_icon.png"> <input type="text" class="hideInput updatetextfield" onchange="UpdatePic(this.id)" id="ttextp" placeholder="Image URL" name="ttextp" value="open.png">
                 </span>
                 <span class="clickShowInput" onmouseover="showInput(this)">
                     <img src="img/videoicon.png"> <input type="text" class="hideInput updatetextfield" onchange="UpdateVid(this.id)" id="ttextv" placeholder="Video URL" name="ttextv" value="">
@@ -242,8 +242,7 @@
                 elems[index].style.display = "none";
             }
             evt.querySelector('input').style.display = 'inline';
-        }evt
-
+        } 
         function onARConnect() {
             console.log("onARConnect", new Date());
             // Handle camera button click (Off and On)
@@ -362,8 +361,9 @@
         function UpdateVid(targetID) {
             console.log("UpdateVid", targetID);
             var strupdate = document.getElementById(targetID).value;
-            console.log(strupdate);
-            targetID = targetID.substring(0, targetID.length - 2);
+ 
+            targetID = targetID.substring(0, targetID.length - 1);
+            console.log(strupdate, targetID);
             var fbtn = "#" + targetID + "A .MarkerVideo";
             document.querySelector(fbtn).setAttribute('src', strupdate);
             var markerId = targetID + "A";
@@ -387,9 +387,9 @@
         }
         function UpdatePic(targetID) {
             console.log("UpdatePic", targetID);
-            var strupdate = document.getElementById(targetID).value;
-            console.log(strupdate);
-            targetID = targetID.substring(0, targetID.length - 2);
+            var strupdate = document.getElementById(targetID).value; 
+            targetID = targetID.substring(0, targetID.length - 1);
+            console.log(strupdate, targetID);
             var fbtn = "#" + targetID + "A .imgMarker";
             document.querySelector(fbtn).setAttribute('src', strupdate);
             var markerId = targetID + "A";

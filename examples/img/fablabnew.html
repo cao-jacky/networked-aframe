@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Image based tracking AR.js demo</title>
+    <!-- import aframe and then ar.js with image tracking / location based features -->
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.slim.js"></script>
+
+    <script src="/easyrtc/easyrtc.js"></script>
+    <script src="/dist/networked-aframe.ed.js"></script>
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"
+            integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+            crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/aframe-randomizer-components@^3.0.1/dist/aframe-randomizer-components.min.js"></script>
+    <script src="https://unpkg.com/aframe-button-controls@^1.1.0/aframe-button-controls.js"></script>
+
+    <script src="/js/aframe-ar.js"></script>
+    <script>THREEx.ArToolkitContext.baseURL = 'https://rawgit.com/jeromeetienne/ar.js/master/three.js/'</script>
+
+    <!-- style for the loader -->
+    <link rel="stylesheet" type="text/css" href="/css/style.css" />
+    <link rel="stylesheet" href="fabstyle.css" type="text/css" media="all">
+
+    <script>
+
+    </script>
+</head> 
+<body>
+    <!-- a-frame scene -->
+    <a-scene networked-scene="room: basic-video; debug: true; adapter: easyrtc; audio: true; video: true; onConnect: onConnect;"
+             arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
+        <a-assets>
+            <video id="defaultvideo" loop="true" src="https://5gwebar.5gear.net:8443/laser1.mp4" width="640" height="480" controls="controls" type="video/mp4" autoplay="false" preload="none">
+                <img id="grid" src="https://img.gs/bbdkhfbzkk/stretch/https://i.imgur.com/25P1geh.png" crossorigin="anonymous">
+                <a-asset-item id="arrow3d" src="arrow.glb"></a-asset-item>
+                <img id="arrowImg"
+                     src="arrow.png" />
+                <template id="avatar-template">
+                    <a-entity class="avatar">
+                        <a-plane color="#FFF" width="0.45" height="0.8" position="0 0 -1" rotation="0 0 0" material="side: front;opacity: 0.5; transparent: true" networked-video-source networked-audio-source></a-plane>
+                        <a-plane color="#FFF" width="0.45" height="0.8" position="0 0 -1" rotation="0 0 0" material="side: back;opacity: 0.5; transparent: true" networked-video-source></a-plane>
+                    </a-entity>
+                </template>
+                <template id="mavatar-template">
+                    <a-entity class="avatar">
+                        <a-plane color="#FFF" width="0.45" height="0.8" position="0 0 -1" rotation="0 0 0" material="side: front;opacity: 0.5; transparent: true" networked-video-source networked-audio-source></a-plane>
+
+                    </a-entity>
+                </template>
+                <template id="marker-template">
+                    <a-entity material="color: red" rotation="270 0 0" text="xOffset:7; width:13;" position="0 0 -1">
+                        <a-text align="left" class="aentitiyblock" width="7" value="" color="green"></a-text>
+                        <a-image class="imgMarker" src="#arrowImg" position="-0.5 0 0" width="1" height="1"></a-image>
+                       
+                    </a-entity>
+                    <!-- static camera that moves according to the device movemenents -->
+                </template>
+                <template id="pointer-template">
+                    <a-entity gltf-model="#arrow3d" material="metalness: 0.8; color:green;" scale="0.1 0.1 0.1">
+                        <a-torus position="0 0 0" scale="0.01 0.01 0.01" id="pointergeo" color="#43A367" radius="0.1" radius-tubular="0.1" clickpointd></a-torus>
+                    </a-entity>
+                </template>
+        </a-assets>
+        <a-entity id="player"
+                  networked="template:#avatar-template;attachTemplateToLocal:false;"
+                  camera wasd-controls look-controls
+                 position="0 0 0">
+            <a-entity id="markerPlacer">
+                <a-marker type="barcode" size="0.06" value="0" id="ftextA" registerevents>
+                    <a-entity>
+                    </a-entity>
+                </a-marker>
+                <a-marker type="barcode" size="0.06" value="1" id="stextA" registerevents>
+                    <a-entity>
+                    </a-entity>
+                </a-marker>
+                <a-marker type="barcode" size="0.06" value="10" id="ttextA" registerevents>
+                    <a-entity >
+                    </a-entity>
+                </a-marker>
+            </a-entity>
+        </a-entity>
+        <a-entity position="0 -1.6 -100"
+                  geometry="primitive: plane; width: 10000; height: 10000;" rotation="-90 0 0"
+                  material="src: #grid; repeat: 10000 10000; transparent: true; metalness:0.6; roughness: 0.4; sphericalEnvMap: #sky;"></a-entity>
+
+    </a-scene>
+    <canvas id="mixCanvas" width="1920" height="1080"></canvas>
+    <button id="camera-btn" type="button" class="camera-btn">Front Cam</button>
+    <button id="mic-btn" type="button" class="mic-btn">Mute Mic</button>
+    <script>
+        // Camera status
+        let cameraEnabled = true;
+        // Camera button ele
+        const cameraBtnEle = document.getElementById("camera-btn");
+        const micBtnEle = document.getElementById('mic-btn');
+        var isCSregistered = false;
+        var customerSupportID;
+        NAF.schemas.add({
+            template: '#avatar-template',
+            components: [
+                'position',
+                'rotation'
+            ]
+        }); 
+        NAF.schemas.add({
+            template: '#pointer-template',
+            components: [
+                'position',
+                'rotation',
+                'scale'
+            ]
+        });
+        NAF.schemas.add({
+            template: '#marker-template',
+            components: [
+                'position',
+                'rotation',
+                'scale'
+            ]
+        });
+        //NAF.options.updateRate = 10;
+        function onConnect() {
+            console.log("onARConnect", new Date());
+            //  setInterval(sendScreen, 500);
+            var newTagID = 11;
+            for (var i = 0; i < 10; i++) {
+                var strNewTag = "ttext" + (newTagID + i);
+                var amarkerid = strNewTag + "A";
+                $('<a-marker />', {
+                    id: amarkerid,
+                    type: "barcode",
+                    size: "0.06",
+                    value: newTagID + i, 
+                    appendTo: $('#markerPlacer')
+                });
+                document.querySelector('#' + amarkerid).setAttribute('registerevents', '');
+                //$('<a-entity />', {
+                //    networked: "template:#marker-template",
+                //    appendTo: $('#' + amarkerid)
+                //});
+            } 
+            //var numPlayer = Object.keys(NAF.connection.getConnectedClients()).length;
+            //if (numPlayer > 1  ) {
+            //    document.querySelector("#player").setAttribute('position', { x: numPlayer * 0.5, y: 0, z: 0 });
+            //}
+            // console.error('clientConnected event. ' + numPlayer  );
+            micBtnEle.addEventListener('click', function () {
+                NAF.connection.adapter.enableMicrophone(!micEnabled);
+                micEnabled = !micEnabled;
+                micBtnEle.textContent = micEnabled ? 'Mute Mic' : 'Unmute Mic';
+            });
+            // Handle camera button click (Off and On)
+            cameraBtnEle.addEventListener("click", function () {
+                NAF.connection.adapter.enableCamera(!cameraEnabled);
+                cameraEnabled = !cameraEnabled;
+                cameraBtnEle.textContent = cameraEnabled ? "Rear" : "Front";
+            });
+
+            // Examples of listening to NAF events
+            document.body.addEventListener('connected', function (evt) {
+                console.error('connected event: clientId =', evt.detail.clientId);
+
+            });
+
+            document.body.addEventListener('clientConnected', function (evt) {
+                var numPlayer = Object.keys(NAF.connection.getConnectedClients()).length;
+                console.error('clientConnected event. ' + numPlayer + '  clientId =', evt.detail.clientId);
+                if (!isCSregistered) customerSupportID = evt.detail.clientId;
+            });
+
+            document.body.addEventListener('clientDisconnected', function (evt) {
+                console.error('clientDisconnected event. clientId =', evt.detail.clientId);
+            });
+
+            document.body.addEventListener('entityCreated', function (evt) {
+                console.error('entityCreated event', evt.detail.el, evt.detail.networkIdDDD);
+
+            });
+
+            document.body.addEventListener('entityRemoved', function (evt) {
+                console.error('entityRemoved event. Entity networkId =', evt.detail.networkId);
+            });
+        } 
+        AFRAME.registerComponent('registerevents', {
+            init: function () {
+                var marker = this.el;
+                marker.setAttribute('emitevents', 'true'); 
+                marker.addEventListener('markerFound', function () {
+                    var markerId = marker.id;
+                    console.log('markerFound', markerId);
+                    $.ajax({
+                        type: "POST",
+                        url: "https://5gwebar.5gear.net:8080/",
+                        contentType: "application/json",
+                        data: JSON.stringify({
+                            markerId: markerId
+                        }),
+                        success: function (data) {
+                            var t = JSON.parse(data);
+                            console.log(data);
+                            var htmlstr = JSON.parse(t['payload']);
+                            document.getElementById(markerId).innerHTML = htmlstr['response'];
+                            document.querySelector("#" + markerId + ' a-entity').setAttribute('rotation', "270 0 0");
+                            document.getElementById("defaultvideo").play();
+                        },
+                        dataType: "text"
+                    }).done(function (data) {
+                    });
+                });
+
+                marker.addEventListener('markerLost', function () {
+                    var markerId = marker.id;
+                    console.log('markerLost', markerId); 
+                    document.getElementById(markerId).innerHTML = ''; 
+                    document.getElementById("defaultvideo").remove();
+                });
+            }
+        });
+        var dataType = "p";
+        //var mixedCanvas = document.getElementById("mixCanvas");
+        function sendScreen() {
+            //var videoElement = document.getElementById("arjs-video");
+            var scanvas = document.querySelector('a-scene').components.screenshot.getCanvas('perspective');
+            // var screencanvas = scanvas.toDataURL("image/png");
+
+
+            // var width = videoElement.videoWidth / 4;
+            // var height = videoElement.videoHeight / 4;
+            //  var context = mixedCanvas.getContext("2d");
+            // var hRatio = (width / videoElement.videoWidth) * videoElement.videoHeight;
+            // var pixels = 4 * width * hRatio;
+            // mixedCanvas.width = width;
+            // mixedCanvas.height = hRatio;
+            //context.drawImage(videoElement, 0, 0, width, hRatio);
+            // context.drawImage(scanvas, 0, 0, width, hRatio);
+            // var mixpng = mixedCanvas.toDataURL("image/png");
+            // console.log(mixpng);
+            // NAF.connection.sendData(customerSupportID, "sc", screencanvas)
+            //$.ajax({
+            //    type: "POST",
+            //    url: "https://5gwebar.5gear.net:8080/support",
+            //    contentType: "application/json",
+            //    data: JSON.stringify({
+            //        markerId: "sc",
+            //        elementml: mixpng
+            //    }),
+            //    success: function (data) {
+            //        var t = JSON.parse(data);
+            //    },
+            //    dataType: "text"
+            //}).done(function (data) {
+            //});
+        }
+            
+    </script>
+</body>
+</html>
+

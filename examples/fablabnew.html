@@ -32,35 +32,34 @@
     <a-scene networked-scene="room: basic-video; debug: true; adapter: easyrtc; audio: true; video: true; onConnect: onConnect;"
              arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
         <a-assets>
-            <img id="grid" src="https://img.gs/bbdkhfbzkk/stretch/https://i.imgur.com/25P1geh.png" crossorigin="anonymous">
-            <a-asset-item id="arrow3d" src="arrow.glb"></a-asset-item>
-            <img id="arrowImg"
-                 src="arrow.png" />
-            <template id="avatar-template">
-                <a-entity class="avatar">
-                    <a-plane color="#FFF" width="0.45" height="0.8" position="0 0 -1" rotation="0 0 0" material="side: front;opacity: 0.5; transparent: true" networked-video-source networked-audio-source></a-plane>
-                    <a-plane color="#FFF" width="0.45" height="0.8" position="0 0 -1" rotation="0 0 0" material="side: back;opacity: 0.5; transparent: true" networked-video-source ></a-plane>
-                </a-entity>
-            </template>
-            <template id="mavatar-template">
-                <a-entity class="avatar">
-                    <a-plane color="#FFF" width="0.45" height="0.8" position="0 0 -1" rotation="0 0 0" material="side: front;opacity: 0.5; transparent: true" networked-video-source networked-audio-source></a-plane>
+              <img id="grid" src="https://img.gs/bbdkhfbzkk/stretch/https://i.imgur.com/25P1geh.png" crossorigin="anonymous">
+                <a-asset-item id="arrow3d" src="arrow.glb"></a-asset-item>
+                <img id="arrowImg" src="arrow.png" />
+                <template id="avatar-template">
+                    <a-entity class="avatar">
+                        <a-plane color="#FFF" width="0.45" height="0.8" position="0 0 -1" rotation="0 0 0" material="side: front;opacity: 0.5; transparent: true" networked-video-source networked-audio-source></a-plane>
+                        <a-plane color="#FFF" width="0.45" height="0.8" position="0 0 -1" rotation="0 0 0" material="side: back;opacity: 0.5; transparent: true" networked-video-source></a-plane>
+                    </a-entity>
+                </template>
+                <template id="mavatar-template">
+                    <a-entity class="avatar">
+                        <a-plane color="#FFF" width="0.45" height="0.8" position="0 0 -1" rotation="0 0 0" material="side: front;opacity: 0.5; transparent: true" networked-video-source networked-audio-source></a-plane>
 
-                </a-entity>
-            </template>
-            <template id="marker-template">
-                <a-entity material="color: red" rotation="270 0 0" text="xOffset:7; width:13;" position="0 0 -1">
-                    <a-text align="left" class="aentitiyblock" width="7" value="" color="green"></a-text>
-                    <a-image class="imgMarker" src="#arrowImg" position="-0.5 0 0" width="1" height="1"></a-image>
-                    <a-video class="MarkerVideo" src="" transparent="true" width="1.6" height="0.9"></a-video>
-                </a-entity>
-                <!-- static camera that moves according to the device movemenents -->
-            </template>
-            <template id="pointer-template">
-                <a-entity gltf-model="#arrow3d" material="metalness: 0.8; color:green;" scale="0.1 0.1 0.1">
-                    <a-torus position="0 0 0" scale="0.01 0.01 0.01" id="pointergeo" color="#43A367" radius="0.1" radius-tubular="0.1" clickpointd></a-torus>
-                </a-entity>
-            </template>
+                    </a-entity>
+                </template>
+                <template id="marker-template">
+                    <a-entity material="color: red" rotation="270 0 0" text="xOffset:7; width:13;" position="0 0 -1">
+                        <a-text align="left" class="aentitiyblock" width="10" value="" color="green"></a-text>
+                        <a-image class="imgMarker" src="#arrowImg" position="-0.5 0 0" width="1" height="1"></a-image>
+                       
+                    </a-entity>
+                    <!-- static camera that moves according to the device movemenents -->
+                </template>
+                <template id="pointer-template">
+                    <a-entity gltf-model="#arrow3d" material="metalness: 0.8; color:green;" scale="0.1 0.1 0.1">
+                        <a-torus position="0 0 0" scale="0.01 0.01 0.01" id="pointergeo" color="#43A367" radius="0.1" radius-tubular="0.1" clickpointd></a-torus>
+                    </a-entity>
+                </template>
         </a-assets>
         <a-entity id="player"
                   networked="template:#avatar-template;attachTemplateToLocal:false;"
@@ -202,7 +201,8 @@
                             console.log(data);
                             var htmlstr = JSON.parse(t['payload']);
                             document.getElementById(markerId).innerHTML = htmlstr['response'];
-                            document.querySelector("#" + markerId +' a-entity').setAttribute('rotation', "270 0 0");
+                            document.querySelector("#" + markerId + ' a-entity').setAttribute('rotation', "270 0 0");
+                            //document.querySelector("#" + markerId + ' a-video').play();
                         },
                         dataType: "text"
                     }).done(function (data) {
@@ -212,7 +212,9 @@
                 marker.addEventListener('markerLost', function () {
                     var markerId = marker.id;
                     console.log('markerLost', markerId); 
-                    document.getElementById(markerId).innerHTML = '';
+                    document.querySelector("#" + markerId + ' a-entity a-video').getAttribute('src')="";
+                    document.getElementById(markerId).innerHTML = ''; 
+                  
                 });
             }
         });
