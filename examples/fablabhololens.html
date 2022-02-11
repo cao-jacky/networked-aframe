@@ -37,8 +37,8 @@
             <img id="arrowImg" src="arrow.png" />
             <template id="avatar-template">
                 <a-entity class="avatar">
-                    <a-plane color="#FFF" width="0.45" height="0.8" position="0 0 -1" rotation="0 0 0" material="side: front;opacity: 0.5; transparent: true" networked-video-source networked-audio-source></a-plane>
-                    <a-plane color="#FFF" width="0.45" height="0.8" position="0 0 -1" rotation="0 0 0" material="side: back;opacity: 0.5; transparent: true" networked-video-source></a-plane>
+                    <a-plane color="#FFF" width="0.45" height="0.8" position="0.5 0.6 -2" rotation="0 0 0" material="side: front;opacity: 0.5; transparent: true" networked-video-source networked-audio-source></a-plane>
+                    <a-plane color="#FFF" width="0.45" height="0.8" position="0.5 0.6 -2" rotation="0 0 0" material="side: back;opacity: 0.5; transparent: true" networked-video-source></a-plane>
                 </a-entity>
             </template>
             <template id="mavatar-template">
@@ -80,9 +80,6 @@
                 </a-marker>
             </a-entity>
         </a-entity>
-        <a-entity position="0 -1.6 -100"
-                  geometry="primitive: plane; width: 10000; height: 10000;" rotation="-90 0 0"
-                  material="src: #grid; repeat: 10000 10000; transparent: true; metalness:0.6; roughness: 0.4; sphericalEnvMap: #sky;"></a-entity>
 
     </a-scene>
     <canvas id="mixCanvas" width="1920" height="1080"></canvas>
