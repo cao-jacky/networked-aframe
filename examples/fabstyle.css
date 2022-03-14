@@ -1,10 +1,10 @@
 .photoview {
     padding: 20px;
     position: absolute;
-    bottom: 25%;
-    left: 70%;
+    bottom: 2%;
+    left: 76%;
     height: auto;
-    width: 400px;
+    width: 350px;
     background: rgba(225, 225, 225, .5);
     opacity: 0.7;
 }
