@@ -48,9 +48,12 @@
                     </a-entity>
                 </template>
                 <template id="marker-template">
-                    <a-entity material="color: red" rotation="270 0 0" text="xOffset:7; width:13;" position="0 0 -1">
-                        <a-text align="left" class="aentitiyblock" width="10" value="" color="green"></a-text>
-                        <a-image class="imgMarker" src="#arrowImg" position="-0.5 0 0" width="1" height="1"></a-image>
+                    <a-entity >
+                    <!-- text="xOffset:7; width:13;" position="0 0 -1"> -->
+                        <!-- <a-box geometry="primitive: box" material="color: #303971; opacity: 0.5" scale="2 1 0.1" text="xOffset:7; width:13;"></a-box> -->
+                        <!-- <a-text align="center" class="aentitiyblock" width="5"></a-text> -->
+
+                        <!-- <a-image class="imgMarker" src="#arrowImg" position="-0.5 0 0" width="1" height="1"></a-image> -->
                        
                     </a-entity>
                     <!-- static camera that moves according to the device movemenents -->
@@ -188,14 +191,15 @@
                     console.log('markerFound', markerId);
                     $.ajax({
                         type: "POST",
-                        url: "https://5gwebar.5gear.net:8080/",
+                        // url: "https://5gwebar.5gear.net:8080/",
+                        url: "https://192.168.137.234:8080/",
                         contentType: "application/json",
                         data: JSON.stringify({
                             markerId: markerId
                         }),
                         success: function (data) {
                             var t = JSON.parse(data);
-                            console.log(data);
+                            // console.log(data);
                             var htmlstr = JSON.parse(t['payload']);
                             document.getElementById(markerId).innerHTML = htmlstr['response'];
                             document.querySelector("#" + markerId + ' a-entity').setAttribute('rotation', "270 0 0");

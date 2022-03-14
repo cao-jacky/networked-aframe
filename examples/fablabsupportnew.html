@@ -19,6 +19,7 @@
     <script src="/js/spawn-in-circle.component.js"></script>
     <script src="/js/aframe-ar.js"></script>
     <script>THREEx.ArToolkitContext.baseURL = 'https://rawgit.com/jeromeetienne/ar.js/master/three.js/'</script>
+    <script src="https://kit.fontawesome.com/6187a9970c.js" crossorigin="anonymous"></script>
     <!-- style for the loader -->
     <link rel="stylesheet" href="fabstyle.css" type="text/css" media="all">
 
@@ -47,23 +48,26 @@
                 </a-entity>
             </template>
             <template id="marker-template">
-                <a-entity material="color: red"
-                          rotation="270 0 0" text="xOffset:7; width:13;" position="0 0 -1">
-                    <a-text align="left" class="aentitiyblock" width="9" value="" color="green" font="exo2"></a-text>
-                    <a-image class="imgMarker" src="#arrowImg" position="-0.5 0 0" width="1" height="1"></a-image>
-                    <a-video class="MarkerVideo" src="https://5gwebar.5gear.net:8443/laser1.mp4" transparent="true" width="1.6" height="0.9" position="0 0.6 0"></a-video> 
+                <a-entity rotation="270 0 0">
+                    <!-- text="xOffset:7; width:13;" position="0 0 -1"> -->
+                        <a-box geometry="primitive: box" material="color: #303971; opacity: 0.5" scale="2 0.7 0.05" ></a-box>
+                        <!-- <a-text align="center" class="aentitiyblock" width="5"></a-text> -->
+                        <a-text align="center" class="aentitiyblock" width="9" value="" color="white" position="0 0 0" z-offset="0.11" wrap-count="125"></a-text>
+
+                        <!-- <a-image class="imgMarker" src="#arrowImg" position="-0.5 0 0" width="1" height="1"></a-image> -->
+                       
                 </a-entity>
                 <!-- static camera that moves according to the device movemenents -->
             </template>
-            <template id="pointer-template">
+            <!-- <template id="pointer-template">
                 <a-entity gltf-model="#arrow3d" material="metalness: 0.8; color:#43A367;" scale="0.1 0.1 0.1">
                     <a-torus id="pointergeo" scale="0.01 0.01 0.01" color="#43A367" radius="0.5" radius-tubular="0.1"></a-torus>
                 </a-entity>
-            </template>
+            </template> -->
 
         </a-assets>
         <a-entity button-controls></a-entity>
-        <a-entity id="pointerCtrl" position="0 0 0" scale="0.1 0.1 0.1" networked="template:#pointer-template;" clickpointd>
+        <!-- <a-entity id="pointerCtrl" position="0 0 0" scale="0.1 0.1 0.1" networked="template:#pointer-template;" clickpointd> -->
         </a-entity>
 
         <a-entity id="player" camera wasd-controls
@@ -105,42 +109,31 @@
     <button id="mic-btn" type="button" class="camera-btn">Mute Mic</button>
     <button id="camera-btn" type="button" class="camera-btn">Hide Cam</button>
     
-    <div class="photoview vr-overlay-content">
+    <div class="support_tags vr-overlay-content ">
         <form id="editTextForm">
             <!-- <input type="button" value="Stop Image From Client" id="myStopInterval" class="btn btn-danger">
     <input type="button" value="Start Image From Client" class="btn btn-success" id="startInterval">-->
-            <h6>Configuration in Current Location:</h6>
-            <label for="ftext">Tag 1:</label>
-            <input type="text" onchange="UpdateText(this.id)" id="ftext" name="ftext" class="updatetextfield" value="Open the cover to start">
-            <div> 
-                <span class="clickShowInput" onmouseover="showInput(this)"><img src="img/image_icon.png"> <input class="hideInput updatetextfield" type="text" onchange="UpdatePic(this.id)" placeholder="Image URL" id="ftextp" name="ftextpic" value="focus.png"></span>
-                <span class="clickShowInput" onmouseover="showInput(this)"><img src="img/videoicon.png"><input class="hideInput updatetextfield" type="text" onchange="UpdateVid(this.id)" placeholder="Video URL" id="ftextv" name="ftextpic" value=""></span>
-            </div>
-
-            <label for="stext">Tag 2:</label>
-            <input type="text" onchange="UpdateText(this.id)" id="stext" name="stext" class="updatetextfield" value="Put below this position">
-            <div>
-                <span class="clickToshowImg" onmouseover="showInput(this)">
-                    <img src="img/image_icon.png">  <input class="hideInput updatetextfield" type="text" onchange="UpdatePic(this.id)" id="stextp" name="stextp" placeholder="Image URL" value="joystick.png">
-                </span>
-                <span class="clickShowInput" onmouseover="showInput(this)">
-                    <img src="img/videoicon.png"> <input class="hideInput updatetextfield" type="text" onchange="UpdateVid(this.id)" id="stextv" name="stextv" placeholder="Video URL" value="">
-                </span> 
-            </div>
-            <label for="ttext">Tag 3:</label>
-            <input type="text" onchange="UpdateText(this.id)" id="ttext" name="ttext" class="updatetextfield" value="Close the cover">
-            <div>
-                <span class="clickToshowImg" onmouseover="showInput(this)">
-                    <img src="img/image_icon.png"> <input type="text" class="hideInput updatetextfield" onchange="UpdatePic(this.id)" id="ttextp" placeholder="Image URL" name="ttextp" value="open.png">
-                </span>
-                <span class="clickShowInput" onmouseover="showInput(this)">
-                    <img src="img/videoicon.png"> <input type="text" class="hideInput updatetextfield" onchange="UpdateVid(this.id)" id="ttextv" placeholder="Video URL" name="ttextv" value="">
-                </span> 
-            </div>
+            <div class="tag_box_header">Configure Marker Tags</div>
+            <table id="tag_table">
+                <tr>
+                    <td><label for="ftext">Tag 1:</label></td>
+                    <td><input type="text" onchange="UpdateText(this.id)" id="ftext" name="ftext" class="updatetextfield" value="Open the cover to start"></td>
+                </tr>
+                <tr>
+                    <td><label for="stext">Tag 2:</label></td>
+                    <td><input type="text" onchange="UpdateText(this.id)" id="stext" name="stext" class="updatetextfield" value="Put below this position"></td>
+                </tr>
+                <tr>
+                    <td><label for="ttext">Tag 3:</label></td>
+                    <td><input type="text" onchange="UpdateText(this.id)" id="ttext" name="ttext" class="updatetextfield" value="Close the cover"></td>
+                </tr>
+            </table>
         </form>
-        <input type="button" value="New Tag" id="newTagBtn" class="btn btn-info">
+        <div id="new_tag_button">
+            <button id="newTagBtn" class="btn btn-info"><i class="fa-solid fa-square-plus" id="new_tag_icon"></i></br>New Tag</button>
+        </div>
         <div id="connectedBtnCtrl"></div>
-        Press X, C, Z to move pointer x, y, z.
+        <!-- Press X, C, Z to move pointer x, y, z. -->
         <canvas id="webcam2d"  ></canvas>
     </div> 
 
@@ -163,14 +156,14 @@
             ]
         });
         
-        NAF.schemas.add({
-            template: '#pointer-template',
-            components: [
-                'position',
-                'rotation',
-                'scale'
-            ]
-        });
+        // NAF.schemas.add({
+        //     template: '#pointer-template',
+        //     components: [
+        //         'position',
+        //         'rotation',
+        //         'scale'
+        //     ]
+        // });
         NAF.options.updateRate = 10;
         AFRAME.registerComponent('clickpointd', {
             schema: { speed: { default: 1 } },
@@ -310,53 +303,53 @@
                 console.error('entityRemoved event. Entity networkId =', evt.detail.networkId);
             });
         }
-        document.addEventListener('keydown', (event) => {
-            var name = event.key;
-            var code = event.code;
-            var pointerObj = document.querySelector("#pointerCtrl");
-            var position = pointerObj.getAttribute('position');
-            rotX = position.x;
-            rotY = position.y;
-            rotZ = position.z;
-            // Alert the key name and key code on keydown
-            // alert(`Key pressed ${name} \r\n Key code value: ${code}`);
-            switch (name) {
-                case 'x':
-                    rotX = (rotX + 0.005) ;
-                    pointerObj.setAttribute('position', { x: rotX, y: rotY, z: rotZ });
-                    break;
-                case 'X':
-                    rotX = (rotX - 0.005) ;
-                    pointerObj.setAttribute('position', { x: rotX, y: rotY, z: rotZ });
-                    break;
-                case 'c':
-                    rotY = (rotY + 0.005) ;
-                    pointerObj.setAttribute('position', { x: rotX, y: rotY, z: rotZ });
-                    // expected output: "Mangoes and papayas are $2.79 a pound."
-                    break;
-                case 'C':
-                    rotY = (rotY - 0.005) ;
-                    pointerObj.setAttribute('position', { x: rotX, y: rotY, z: rotZ });
-                    // expected output: "Mangoes and papayas are $2.79 a pound."
-                    break;
-                case 'z':
-                    rotZ = (rotZ + 0.005) ;
-                    pointerObj.setAttribute('position', { x: rotX, y: rotY, z: rotZ });
-                    break;
-                case 'Z':
-                    rotZ = (rotZ - 0.005) ;
-                    pointerObj.setAttribute('position', { x: rotX, y: rotY, z: rotZ });
-                    break;
-                case 'v':
-                    currentScale = currentScale - 0.005;
-                    pointerObj.setAttribute('scale', { x: currentScale, y: currentScale, z: currentScale });
-                    break;
-                case 'V':
-                    currentScale = currentScale + 0.005;
-                    pointerObj.setAttribute('scale', { x: currentScale, y: currentScale, z: currentScale });
-                    break;  
-            }
-        }, false);
+        // document.addEventListener('keydown', (event) => {
+        //     var name = event.key;
+        //     var code = event.code;
+        //     var pointerObj = document.querySelector("#pointerCtrl");
+        //     var position = pointerObj.getAttribute('position');
+        //     rotX = position.x;
+        //     rotY = position.y;
+        //     rotZ = position.z;
+        //     // Alert the key name and key code on keydown
+        //     // alert(`Key pressed ${name} \r\n Key code value: ${code}`);
+        //     switch (name) {
+        //         case 'x':
+        //             rotX = (rotX + 0.005) ;
+        //             pointerObj.setAttribute('position', { x: rotX, y: rotY, z: rotZ });
+        //             break;
+        //         case 'X':
+        //             rotX = (rotX - 0.005) ;
+        //             pointerObj.setAttribute('position', { x: rotX, y: rotY, z: rotZ });
+        //             break;
+        //         case 'c':
+        //             rotY = (rotY + 0.005) ;
+        //             pointerObj.setAttribute('position', { x: rotX, y: rotY, z: rotZ });
+        //             // expected output: "Mangoes and papayas are $2.79 a pound."
+        //             break;
+        //         case 'C':
+        //             rotY = (rotY - 0.005) ;
+        //             pointerObj.setAttribute('position', { x: rotX, y: rotY, z: rotZ });
+        //             // expected output: "Mangoes and papayas are $2.79 a pound."
+        //             break;
+        //         case 'z':
+        //             rotZ = (rotZ + 0.005) ;
+        //             pointerObj.setAttribute('position', { x: rotX, y: rotY, z: rotZ });
+        //             break;
+        //         case 'Z':
+        //             rotZ = (rotZ - 0.005) ;
+        //             pointerObj.setAttribute('position', { x: rotX, y: rotY, z: rotZ });
+        //             break;
+        //         case 'v':
+        //             currentScale = currentScale - 0.005;
+        //             pointerObj.setAttribute('scale', { x: currentScale, y: currentScale, z: currentScale });
+        //             break;
+        //         case 'V':
+        //             currentScale = currentScale + 0.005;
+        //             pointerObj.setAttribute('scale', { x: currentScale, y: currentScale, z: currentScale });
+        //             break;  
+        //     }
+        // }, false);
         
         function UpdateVid(targetID) {
             console.log("UpdateVid", targetID);
@@ -372,7 +365,7 @@
             console.log(elementHtml);
             $.ajax({
                 type: "POST",
-                url: "https://5gwebar.5gear.net:8080/support",
+                url: "https://192.168.137.234:8080/support",
                 contentType: "application/json",
                 data: JSON.stringify({
                     markerId: markerId,
@@ -398,7 +391,7 @@
             console.log(elementHtml);
             $.ajax({
                 type: "POST",
-                url: "https://5gwebar.5gear.net:8080/support",
+                url: "https://192.168.137.234:8080/support",
                 contentType: "application/json",
                 data: JSON.stringify({
                     markerId: markerId,
@@ -424,7 +417,7 @@
             console.log(elementHtml);
             $.ajax({
                 type: "POST",
-                url: "https://5gwebar.5gear.net:8080/support",
+                url: "https://192.168.137.234:8080/support",
                 contentType: "application/json",
                 data: JSON.stringify({
                     markerId: markerId,
@@ -456,7 +449,7 @@
                     var elementHtml = element.innerHTML;
                     $.ajax({
                         type: "POST",
-                        url: "https://5gwebar.5gear.net:8080/support",
+                        url: "https://192.168.137.234:8080/support",
                         contentType: "application/json",
                         data: JSON.stringify({
                             markerId: markerId,
@@ -497,7 +490,7 @@
         function sendScreen() {
             $.ajax({
                 type: "POST",
-                url: "https://5gwebar.5gear.net:8080/",
+                url: "https://192.168.137.234:8080/",
                 contentType: "application/json",
                 data: JSON.stringify({
                     markerId: "sc",
@@ -532,45 +525,47 @@
             let strNewTag = "ttext" + newTagID;
             var newTagNum = 3 + newTagID - 10;
             console.log("newtagselect " + newTagNum + ": " + strNewTag);
-            var newinput = document.createElement("input");
-            newinput.type = "text";
-            newinput.name = strNewTag;
-            newinput.id = strNewTag;
-            newinput.className = "updatetextfield";
+
+            var tag_table_element = document.getElementById("tag_table");
+            var new_row = tag_table_element.insertRow(-1);
+
+            var new_cell_tag_name = new_row.insertCell(0);
+            new_cell_tag_name.innerHTML = '<label for="'+strNewTag+'">Tag '+newTagNum+':</label>';
+            
+            var new_cell_tag_field = new_row.insertCell(1);
+            new_cell_tag_field.innerHTML = '<input type="text" name="'+strNewTag+'" id="'+strNewTag+'" className="updatetextfield" for="'+strNewTag+'"> </input>';
+
+            var newinput = document.getElementById(strNewTag);
             newinput.addEventListener('change', function (e) {
                 console.log("newinput.addEventListener", this.id);
                 UpdateText(this.id);
             },  false
             ); 
-            newinput.value = "Wait for support"
-            var newlabel = document.createElement("label");
-            newlabel.innerHTML = "Tag " + newTagNum + ":";
-            newlabel.setAttribute("for", strNewTag);
-            editForm.appendChild(newlabel);
-            editForm.appendChild(newinput);
+
+            // editForm.appendChild(newinput);
             var newAlldiv = document.createElement("div");
             var newPdiv = document.createElement("span");
-            newPdiv.className = "clickToshowImg";
-            newPdiv.addEventListener('mouseover', function (e) {
-                console.log("newPdiv.onmouseover", this.id);
-                showInput(this);
-            }, false
-            );
-            var newPimg = document.createElement("img");
-            newPimg.src = "img/image_icon.png";
-            var newPinput = document.createElement("input");
-            newPinput.type = "text";
-            newPinput.name = strNewTag+"p";
-            newPinput.id = strNewTag+"p";
-            newPinput.className = "hideInput updatetextfield";
-            newPinput.value ="open.png"
-            newPinput.addEventListener('change', function (e) {
-                console.log("newPinput.addEventListener", this.id);
-                UpdatePic(this.id);
-            }, false
-            );
-            newPdiv.appendChild(newPimg);
-            newPdiv.appendChild(newPinput);
+            // newPdiv.className = "clickToshowImg";
+            // newPdiv.addEventListener('mouseover', function (e) {
+            //     console.log("newPdiv.onmouseover", this.id);
+            //     showInput(this);
+            // }, false
+            // );
+            // var newPimg = document.createElement("img");
+            // newPimg.src = "img/image_icon.png";
+            // var newPinput = document.createElement("input");
+            // newPinput.type = "text";
+            // newPinput.name = strNewTag+"p";
+            // newPinput.id = strNewTag+"p";
+            // newPinput.className = "hideInput updatetextfield";
+            // newPinput.value ="open.png"
+            // newPinput.addEventListener('change', function (e) {
+            //     console.log("newPinput.addEventListener", this.id);
+            //     UpdatePic(this.id);
+            // }, false
+            // );
+            // newPdiv.appendChild(newPimg);
+            // newPdiv.appendChild(newPinput);
             newAlldiv.appendChild(newPdiv);
            
 
@@ -581,22 +576,22 @@
                 showInput(this);
             }, false
             );
-            var newVimg = document.createElement("img");
-            newVimg.src = "img/videoicon.png";
-            var newVinput = document.createElement("input");
-            newVinput.type = "text";
-            newVinput.name = strNewTag + "v";
-            newVinput.id = strNewTag + "v";
-            newVinput.className = "hideInput updatetextfield";
-            newVinput.value = "";
-            newVinput.addEventListener('change', function (e) {
-                console.log("newPinput.addEventListener", this.id);
-                UpdateVid(this.id);
-            }, false
-            );
-            newVdiv.appendChild(newVimg);
-            newVdiv.appendChild(newVinput);
-            newAlldiv.appendChild(newVdiv);
+            // var newVimg = document.createElement("img");
+            // newVimg.src = "img/videoicon.png";
+            // var newVinput = document.createElement("input");
+            // newVinput.type = "text";
+            // newVinput.name = strNewTag + "v";
+            // newVinput.id = strNewTag + "v";
+            // newVinput.className = "hideInput updatetextfield";
+            // newVinput.value = "";
+            // newVinput.addEventListener('change', function (e) {
+            //     console.log("newPinput.addEventListener", this.id);
+            //     UpdateVid(this.id);
+            // }, false
+            // );
+            // newVdiv.appendChild(newVimg);
+            // newVdiv.appendChild(newVinput);
+            // newAlldiv.appendChild(newVdiv);
             editForm.appendChild(newAlldiv);
             var amarkerid = strNewTag + "A";
             $('<a-marker />', {
