@@ -2,35 +2,53 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <title>Image based tracking AR.js demo</title>
+    <!-- <meta http-equiv="X-UA-Compatible" content="IE=edge" /> -->
     <!-- import aframe and then ar.js with image tracking / location based features -->
-    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.slim.js"></script>
 
     <script src="/easyrtc/easyrtc.js"></script>
-    <script src="/dist/networked-aframe.ed.js"></script>
+    <script src="/dist/networked-aframe.js"></script>
     <script src="https://code.jquery.com/jquery-2.2.4.min.js"
-            integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
-            crossorigin="anonymous"></script>
+        integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+        crossorigin="anonymous"></script>
     <script src="https://unpkg.com/aframe-randomizer-components@^3.0.1/dist/aframe-randomizer-components.min.js"></script>
     <script src="https://unpkg.com/aframe-button-controls@^1.1.0/aframe-button-controls.js"></script>
 
-    <script src="/js/aframe-ar.js"></script>
+    <!-- <script src="/js/aframe-ar.js"></script> -->
+    <!-- <script src="/js/aframe-ar-nft.js"></script> -->
+    <script src='https://raw.githack.com/AR-js-org/AR.js/ES6/aframe/build/aframe-ar-nft.js'></script>
     <script>THREEx.ArToolkitContext.baseURL = 'https://rawgit.com/jeromeetienne/ar.js/master/three.js/'</script>
+    <title>Image based tracking AR.js demo</title>
 
     <!-- style for the loader -->
     <link rel="stylesheet" type="text/css" href="/css/style.css" />
     <link rel="stylesheet" href="fabstyle.css" type="text/css" media="all">
-
-    <script>
-
-    </script>
 </head> 
+
 <body>
+    <div class="arjs-loader">
+        <div>Loading, please wait...</div>
+    </div>
     <!-- a-frame scene -->
-    <a-scene networked-scene="room: basic-video; debug: true; adapter: easyrtc; audio: true; video: true; onConnect: onConnect;"
-             arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
+    <a-scene 
+        networked-scene="room: basic-video; debug: true; adapter: easyrtc; audio: true; video: true; onConnect: onConnect;"
+        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
+
+        <a-nft
+        type='nft' url='./keyboard/keyboard-image/keyboard'
+        smooth='true' smoothCount='10' smoothTolerance='0.01' smoothThreshold='5'>
+        <!-- <a-text value="Parking" color="red" position="0 0 0" scale="350 350 350" side="double"></a-text> -->
+        <a-entity rotation="270 0 0" scale="50 50 0" position="-100 0 0">
+            <!-- text="xOffset:7; width:13;" position="0 0 -1"> -->
+                <a-box geometry="primitive: box" material="color: #303971; opacity: 0.5" scale="4 1.5 0.05"></a-box>
+                <a-text value="aaaa" align="center" width="100" value="" color="white" z-offset="300" wrap-count="125" ></a-text>               
+                <!-- <a-text value="Parking" color="red" position="0 0 0" scale="350 350 350" side="double" rotation="270 0 0"></a-text> -->
+
+            </a-entity>
+        </a-nft>
+
+
         <a-assets>
               <img id="grid" src="https://img.gs/bbdkhfbzkk/stretch/https://i.imgur.com/25P1geh.png" crossorigin="anonymous">
                 <a-asset-item id="arrow3d" src="arrow.glb"></a-asset-item>
@@ -202,7 +220,7 @@
                             // console.log(data);
                             var htmlstr = JSON.parse(t['payload']);
                             document.getElementById(markerId).innerHTML = htmlstr['response'];
-                            document.querySelector("#" + markerId + ' a-entity').setAttribute('rotation', "270 0 0");
+                            document.querySelector("#" + markerId + ' a-entity').setAttribute('rotation', "0 0 0");
                             //document.querySelector("#" + markerId + ' a-video').play();
                         },
                         dataType: "text"

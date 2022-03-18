@@ -18,8 +18,9 @@ const port = process.env.PORT || 8443;
 
 // Setup and configure Express https server.
 const app = express();
-app.use(express.static(path.resolve(__dirname, "..", "examples")));
+// app.use(express.static(path.resolve(__dirname, "..", "examples")));
 //app.use(express.static(path.resolve(__dirname, "..", "dist")));
+app.use(express.static(path.resolve(__dirname, "..", "5gwebxr")));
 app.use("/dist", express.static(path.resolve(__dirname, "..", "dist")));
 app.use(cors()); 
 

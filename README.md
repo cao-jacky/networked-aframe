@@ -1,3 +1,5 @@
+[slack]: https://aframevr.slack.com/join/shared_invite/zt-f6rne3ly-ekVaBU~Xu~fsZHXr56jacQ
+
 <img src="http://i.imgur.com/7ddbE0q.gif" width="300">
 
 
@@ -70,10 +72,10 @@ Basic Example
 <html>
   <head>
     <title>My Networked-Aframe Scene</title>
-    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.slim.js"></script>
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.4.0/socket.io.slim.js"></script>
     <script src="/easyrtc/easyrtc.js"></script>
-    <script src="https://unpkg.com/networked-aframe@^0.8.0/dist/networked-aframe.min.js"></script>
+    <script src="https://unpkg.com/networked-aframe@^0.9.0/dist/networked-aframe.min.js"></script>
   </head>
   <body>
     <a-scene networked-scene>
@@ -374,7 +376,7 @@ List of the supported adapters:
 | -------- | ----------- | ------------- | ----------- | ---------- |
 | wseasyrtc | DEFAULT - Uses the [open-easyrtc](https://github.com/open-easyrtc/open-easyrtc) library | No | WebSockets | `npm run dev` |
 | easyrtc | Uses the [open-easyrtc](https://github.com/open-easyrtc/open-easyrtc) library | Audio and Video (camera and screen share) | WebRTC | `npm run dev` |
-| janus | Uses the [Janus WebRTC server](https://github.com/meetecho/janus-gateway) and [janus-plugin-sfu](https://github.com/mozilla/janus-plugin-sfu) | Audio and Video (camera OR screen share) | WebRTC | See [naf-janus-adapter](https://github.com/networked-aframe/naf-janus-adapter/tree/3.0.x) |
+| janus | Uses the [Janus WebRTC server](https://github.com/meetecho/janus-gateway) and [janus-plugin-sfu](https://github.com/networked-aframe/janus-plugin-sfu) | Audio and Video (camera OR screen share) | WebRTC | See [naf-janus-adapter](https://github.com/networked-aframe/naf-janus-adapter/tree/3.0.x) |
 | socketio | SocketIO implementation without external library (work in progress, currently no maintainer) | No | WebSockets | `npm run dev-socketio` |
 | webrtc | Native WebRTC implementation without external library (work in progress, currently no maintainer) | Audio | WebRTC | `npm run dev-socketio` |
 | Firebase | [Firebase](https://firebase.google.com/) for WebRTC signalling (currently no maintainer) | No | WebRTC | See [naf-firebase-adapter](https://github.com/networked-aframe/naf-firebase-adapter) |
@@ -467,7 +469,7 @@ By default when an entity is created the [`aframe-lerp-component`](https://githu
 Stay in Touch
 -------------
 
-- Join the [A-Frame Slack](https://aframe.io/slack-invite/) and add the #networked-aframe channel
+- Join the [A-Frame Slack][slack] and add the #networked-aframe channel
 - Follow changes on [GitHub](https://github.com/networked-aframe/networked-aframe/subscription)
 - Let us know if you've made something with Networked-Aframe. We'd love to see it!
 

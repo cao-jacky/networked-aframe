@@ -5,8 +5,8 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>Image based tracking AR.js demo</title>
     <!-- import aframe and then ar.js with image tracking / location based features -->
-    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.slim.js"></script>
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.4.0/socket.io.slim.js"></script>
     <script src="/easyrtc/easyrtc.js"></script>
     <script src="/dist/networked-aframe.js"></script>
     <script src="https://code.jquery.com/jquery-2.2.4.min.js"
@@ -17,20 +17,44 @@
     <script src="https://unpkg.com/aframe-randomizer-components@^3.0.1/dist/aframe-randomizer-components.min.js"></script>
     <script src="https://unpkg.com/aframe-button-controls@^1.1.0/aframe-button-controls.js"></script>
     <script src="/js/spawn-in-circle.component.js"></script>
-    <script src="/js/aframe-ar.js"></script>
+    <!-- <script src="/js/aframe-ar.js"></script> -->
+    <script src='https://raw.githack.com/AR-js-org/AR.js/ES6/aframe/build/aframe-ar-nft.js'></script>
     <script>THREEx.ArToolkitContext.baseURL = 'https://rawgit.com/jeromeetienne/ar.js/master/three.js/'</script>
     <script src="https://kit.fontawesome.com/6187a9970c.js" crossorigin="anonymous"></script>
     <!-- style for the loader -->
     <link rel="stylesheet" href="fabstyle.css" type="text/css" media="all">
 
     <script>
-    </script> 
+        // see issue https://github.com/networked-aframe/networked-aframe/issues/267
+        NAF.schemas.getComponentsOriginal = NAF.schemas.getComponents;
+        NAF.schemas.getComponents = (template) => {
+          if (!NAF.schemas.hasTemplate("#avatar-template")) {
+            NAF.schemas.add({
+              template: '#avatar-template',
+               components: [
+                'position',
+                'rotation',
+                {
+                  selector: '.head',
+                  component: 'material',
+                  property: 'color'
+                }
+              ]
+            });
+          }
+          const components = NAF.schemas.getComponentsOriginal(template);
+          return components;
+        }
+      </script>
     <style>
     </style>
 </head>
 
 <body>
-    <a-scene background="color: black" networked-scene="room: basic-video; debug: true; adapter: easyrtc; audio: true; video: true; onConnect: onARConnect;"
+    <div class="arjs-loader">
+        <div>Loading, please wait...</div>
+      </div>
+    <a-scene networked-scene="room: basic-video; debug: true; adapter: easyrtc; audio: true; video: true; onConnect: onARConnect;"
              arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
         <a-assets>
             <img id="grid" src="https://img.gs/bbdkhfbzkk/stretch/https://i.imgur.com/25P1geh.png" crossorigin="anonymous">
@@ -70,6 +94,19 @@
         <!-- <a-entity id="pointerCtrl" position="0 0 0" scale="0.1 0.1 0.1" networked="template:#pointer-template;" clickpointd> -->
         </a-entity>
 
+        <a-nft
+        type='nft' url='./trex/trex-image/trex'
+        smooth='true' smoothCount='10' smoothTolerance='0.01' smoothThreshold='5'>
+        <!-- <a-text value="Parking" color="red" position="0 0 0" scale="350 350 350" side="double"></a-text> -->
+        <a-entity rotation="270 0 0" scale="150 150 0" position="300 -300 0">
+            <!-- text="xOffset:7; width:13;" position="0 0 -1"> -->
+                <a-box geometry="primitive: box" material="color: #303971; opacity: 0.5" scale="4 1.5 0.05"></a-box>
+                <a-text value="aaaa" align="center" width="100" value="" color="white" z-offset="300" wrap-count="125" ></a-text>               
+                <!-- <a-text value="Parking" color="red" position="0 0 0" scale="350 350 350" side="double" rotation="270 0 0"></a-text> -->
+
+            </a-entity>
+        </a-nft>
+
         <a-entity id="player" camera wasd-controls
                   networked="template:#avatar-template;attachTemplateToLocal:false;"
                   position="0 0 0">
@@ -80,6 +117,8 @@
             <a-entity arrow="length: 3; headWidth: .5" position="0 2 -3"></a-entity>
             <a-entity arrow="direction: 1 1 0" position="0 2.1 -3"></a-entity>
             <a-entity arrow="direction: 1 -1 0; length: 1" position="0 1.5 -3"></a-entity>
+
+
 
             <a-entity id="markerPlacer">
                 <a-marker type="barcode" size="0.06" value="0" id="ftextA" registerevents>
@@ -175,9 +214,9 @@
                 //sceneEl.addEventListener('mousedown', this.OnDocumentMouseDown.bind(this));
                 //sceneEl.addEventListener('mouseup', this.OnDocumentMouseUp.bind(this));
                 //sceneEl.addEventListener('mousemove', this.OnDocumentMouseMove.bind(this));
-                document.addEventListener('mousedown', this.OnDocumentMouseDown.bind(this));
-                document.addEventListener('mouseup', this.OnDocumentMouseUp.bind(this));
-                document.addEventListener('mousemove', this.OnDocumentMouseMove.bind(this));
+                // document.addEventListener('mousedown', this.OnDocumentMouseDown.bind(this));
+                // document.addEventListener('mouseup', this.OnDocumentMouseUp.bind(this));
+                // document.addEventListener('mousemove', this.OnDocumentMouseMove.bind(this));
                 this.x_cord = 0;
                 this.y_cord = 0;
             },
