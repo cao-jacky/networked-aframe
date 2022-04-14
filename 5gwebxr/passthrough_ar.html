@@ -1,0 +1,491 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Passthrough AR Experience</title>
+    <meta name="description" content="HoloLens Experience">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image.prod.js"></script>
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-aframe.prod.js"></script>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+
+    <script src="https://unpkg.com/networked-aframe@^0.9.0/dist/networked-aframe.min.js"
+        crossorigin="anonymous"></script>
+    <script src="https://webrtc.github.io/adapter/adapter-latest.js" crossorigin="anonymous"></script>
+    <script src="/dist/naf-janus-adapter.js"></script>
+
+    <script src="https://unpkg.com/aframe-randomizer-components@^3.0.1/dist/aframe-randomizer-components.min.js"
+        crossorigin="anonymous"></script>
+
+    <script src="https://kit.fontawesome.com/83f0ae3239.js" crossorigin="anonymous"></script>
+
+    <link rel="stylesheet" href="/assets/css/passthrough_ar.css" type="text/css" media="all" crossorigin="anonymous">
+    
+</head>
+
+<body>
+    <a-scene
+        mindar-image="imageTargetSrc: https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.4/examples/image-tracking/assets/card-example/card.mind; uiScanning: no"
+        color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false"
+        device-orientation-permission-ui="enabled: false" networked-scene="
+        room: 1;
+        debug: false;
+        adapter: janus;
+        connectOnLoad: true;
+        serverURL: wss://192.168.1.101:8989/janus;
+      ">
+        <a-assets>
+            <img id="card"
+                src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.4/examples/image-tracking/assets/card-example/card.png" />
+            <a-asset-item id="avatarModel"
+                src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.4/examples/image-tracking/assets/card-example/softmind/scene.gltf">
+            </a-asset-item>
+
+            <img id="chevron" src="/assets/arrow_white.png" />
+
+            <template id="avatar-template" type="text/html">
+                <a-entity class="avatar" networked-audio-source>
+                  <a-plane id="camera_plane" color="#fff" width="4" height="3" position="0 .6 0" 
+                  rotation="0 0 0" material="side: back; opacity: 0.6" networked-video-source></a-plane>                  
+                </a-entity>
+            </template>
+        
+        </a-assets>
+
+        <a-camera look-controls="enabled: false" wasd-controls="enabled: false" position="0 0 0">
+            <!-- <a-entity geometry="primitive: plane; height: 0.2; width: 0.2" position="0 -2 -20"
+            material="color: gray; opacity: 0.5"></a-entity> -->                
+            <!-- <a-text position="0 0 -20" scale="1 1 1" value="Remote Support"></a-text> -->
+            <a-entity 
+                id="player" 
+                networked="template:#avatar-template;attachTemplateToLocal:false;" 
+                position="0 -5 -20" rotation="0 180 0">
+            </a-entity>
+        </a-camera>
+
+        <a-entity mindar-image-target="targetIndex: 0">
+            <!-- <a-plane src="#card" position="0 0 0" height="0.552" width="1" rotation="0 0 0"></a-plane>
+            <a-gltf-model rotation="0 0 0 " position="0 0 0.1" scale="0.005 0.005 0.005" src="#avatarModel"
+                animation="property: position; to: 0 0.1 0.1; dur: 1000; easing: easeInOutQuad; loop: true; dir: alternate"> -->
+
+            <a-entity position="0 0.3 0">
+                <a-plane id="data_item" material="side: double; color: #303971; transparent: true; opacity: 0.5" height="0.7" width="1" depth="0.01">
+                    <a-text position="-0.47 0.25 0" scale="0.5 0.5 0.5" value="Computer"></a-text>
+                    <a-text position="-0.46 0.13 0" wrap-count="26" scale="0.15 0.15 0.15" value="Use this computer to set the settings of the laser cutter."></a-text>
+                </a-plane>
+    
+                <a-circle material="side: double; color: #303971; transparent: true; opacity: 0.5" position="-0.7 0 0" radius="0.1">
+                    <a-image src="#chevron" material="alphaTest: 0.5" position="0 0 0.01" width="1" scale="0.1 0.1 0.1" rotation="0 180 0"></a-image>
+                </a-circle>
+
+                <a-circle material="side: double; color: #303971; transparent: true; opacity: 0.5" position="0.7 0 0" radius="0.1">
+                    <a-image src="#chevron" material="alphaTest: 0.5" position="0 0 0.01" width="1" scale="0.1 0.1 0.1" rotation="0 0 0"></a-image>
+                </a-circle>
+    
+                <a-plane material="side: double; color: #303971; transparent: true; opacity: 0" position="0 -0.5 0" height="0.2" width="1" depth="0.01">
+                    <a-plane material="side: double; color: #303971; transparent: true; opacity: 0.5;" position="-0.39 0 0" height="0.2" width="0.2" depth="0.02"></a-plane>
+                    <a-plane material="side: double; color: #303971; transparent: true; opacity: 0.5;" position="-0.13 0 0" height="0.2" width="0.2" depth="0.02"></a-plane>
+                    <a-plane material="side: double; color: #303971; transparent: true; opacity: 0.5;" position="0.13 0 0" height="0.2" width="0.2" depth="0.02"></a-plane>
+                    <a-plane material="side: double; color: #303971; transparent: true; opacity: 0.5;" position="0.39 0 0" height="0.2" width="0.2" depth="0.02"></a-plane>
+                </a-plane>
+
+            </a-entity>
+            
+
+        </a-entity>
+
+    </a-scene>
+
+    <style>
+        .actions {
+            position: absolute;
+            display: flex;
+            bottom: 3%;
+            left: 3%;
+        }
+
+        .button {
+            cursor: pointer;
+            background: #fff;
+            height: 40px;
+            width: 130px;
+            border-radius: 30px;
+        }
+
+        .github-corner:hover .octo-arm {
+            animation: octocat-wave 560ms ease-in-out
+        }
+
+        #config_menu {
+            display: none;
+        }
+
+        @keyframes octocat-wave {
+
+            0%,
+            100% {
+                transform: rotate(0)
+            }
+
+            20%,
+            60% {
+                transform: rotate(-25deg)
+            }
+
+            40%,
+            80% {
+                transform: rotate(10deg)
+            }
+        }
+
+        @media (max-width:500px) {
+            .github-corner:hover .octo-arm {
+                animation: none
+            }
+
+            .github-corner .octo-arm {
+                animation: octocat-wave 560ms ease-in-out
+            }
+        }
+    </style>
+
+    
+    <div class="actions">
+        <button id="camera-btn" type="button" class="button">Show Camera</button>
+        <!-- <button id="scene-btn" type="button" class="button">Start streaming scene</button> -->
+    </div>
+
+    <!-- Button to spawn the interaction menu -->
+    <div class="overlay_menu">
+        <button id="menu_btn" type="button">Menu</button>
+    </div>
+
+    <div class="overlay_box" id="config_menu" style="display: none;"> 
+        <div>hello</div>
+        <button class="menu_items" type="button" id="menu_usr_btn">User</button>
+    </div>
+
+    <div class="overlay_box" id="user_menu" style="display: none;">
+        <div class="menu_title">User</div>
+        <button class="menu_items" type="button" id="usr_slc_btn">Select user</button><br>
+        <button class="menu_items" type="button" id="usr_crt_btn">Create user</button>
+    </div>
+
+    <div class="overlay_box" id="user_create" style="display: none;">
+        <div class="menu_title">User details</div>
+        <form id="user_create_form">
+            <label for="fname">First name:</label><br>
+            <input type="text" id="fname" name="fname"><br>
+            <label for="lname">Last name:</label><br>
+            <input type="text" id="lname" name="lname"><br>
+            <input class="submit_btn" id="user_create_submit_btn" type="submit" value="Submit" >
+        </form>
+    </div>
+
+    <div class="overlay_box" id="user_list" style="display: none;">
+        <div class="menu_title">Select user</div>
+        <table class="custom_lists" id="table_user_list">
+            <!-- <tr>
+                <th>test1</th>
+                <th>test2</th>
+                <th>test3</th>
+            </tr> -->
+        </table>
+    </div>
+
+    <div class="overlay_box" id="status_box" style="display: none;">
+        <div>User was created</div>
+    </div>
+
+    <script>
+        function change_user(user) {
+            console.log(user);
+        }
+    </script>
+
+    <script>
+        function genClientId() {
+            let num = '';
+            for (let i = 0; i < 16; i++) {
+                num += Math.floor(Math.random() * 10).toString();
+            }
+            return num;
+        }
+
+        const state = {};
+        state.currentStream = null;
+        state.cameraEnabled = false;
+        state.sceneStreamingEnabled = false;
+
+        // Prompt for audio.
+        document.addEventListener('DOMContentLoaded', () => {
+            const scene = document.querySelector('a-scene');
+            const cameraBtnEl = document.getElementById('camera-btn');
+            // const sceneBtnEl = document.getElementById('scene-btn');
+
+            const menu_btn_el = document.getElementById('menu_btn');
+            const menu_el = document.getElementById('config_menu');
+
+            const user_btn_el = document.getElementById('menu_usr_btn');
+            const user_menu_el = document.getElementById('user_menu');
+
+            const user_cr_btn_el = document.getElementById('usr_crt_btn');
+            const user_cr_el = document.getElementById('user_create');
+            const user_cr_sb_btn_el = document.getElementById('user_create_submit_btn');
+
+            const user_sl_btn_el = document.getElementById('usr_slc_btn');
+            const user_sl_el = document.getElementById('user_list');
+
+            const table_usrs_el = document.getElementById('table_user_list');
+
+            const status_box_el = document.getElementById('status_box');
+
+            const stopAndRemoveVideoTrack = async () => {
+                const videoTracks = state.currentStream.getVideoTracks();
+                if (videoTracks.length > 0) {
+                    videoTracks[0].stop();
+                    state.currentStream.removeTrack(videoTracks[0]);
+                    await NAF.connection.adapter.setLocalMediaStream(state.currentStream);
+                }
+            };
+
+            // Handle camera button click (Show and Hide)
+            cameraBtnEl.addEventListener('click', async () => {
+                if (state.sceneStreamingEnabled) {
+                    await stopAndRemoveVideoTrack();
+                    state.sceneStreamingEnabled = false;
+                    // sceneBtnEl.textContent = 'Start streaming scene';
+                }
+
+                if (state.cameraEnabled) {
+                    await stopAndRemoveVideoTrack();
+                } else {
+                    const stream = await navigator.mediaDevices.getUserMedia(
+                        {
+                            video: {
+                                mediaSource: "camera",
+                                // height: { max: 1280 },
+                                // width: { max: 720 },
+                                frameRate: { max: 60, ideal: 30},
+                                facingMode: { ideal: "environment" }
+                            }
+                        });
+                    state.currentStream.addTrack(stream.getVideoTracks()[0]);
+                    await NAF.connection.adapter.setLocalMediaStream(state.currentStream);
+                }
+
+                state.cameraEnabled = !state.cameraEnabled;
+                cameraBtnEl.textContent = state.cameraEnabled ? 'Hide Camera' : 'Show Camera';
+            });
+
+            // Handle scene streaming button click (Start and Stop)
+            // sceneBtnEl.addEventListener('click', async () => {
+            //     if (state.cameraEnabled) {
+            //         await stopAndRemoveVideoTrack();
+            //         state.cameraEnabled = false;
+            //         cameraBtnEl.textContent = 'Show Camera';
+            //     }
+
+            //     if (state.sceneStreamingEnabled) {
+            //         await stopAndRemoveVideoTrack();
+            //     } else {
+            //         const stream = scene.canvas.captureStream(30);
+            //         state.currentStream.addTrack(stream.getVideoTracks()[0]);
+            //         await NAF.connection.adapter.setLocalMediaStream(state.currentStream);
+            //     }
+
+            //     state.sceneStreamingEnabled = !state.sceneStreamingEnabled;
+            //     sceneBtnEl.textContent = state.sceneStreamingEnabled ? 'Stop streaming scene' : 'Start streaming scene';
+            // });
+
+            menu_btn_el.addEventListener('click', async () => {
+                if (menu_el.style.display === "none") {
+                    menu_el.style.display = "block";
+                } else {
+                    menu_el.style.display = "none";
+                }
+            });
+
+            user_btn_el.addEventListener('click', async () => {
+                if (user_menu_el.style.display === "none") {
+                    user_menu_el.style.display = "block";
+                } else {
+                    user_menu_el.style.display = "none";
+                }
+
+                if (user_sl_el.style.display === "block") {
+                    user_sl_el.style.display = "none";
+                } 
+
+                if (user_cr_el.style.display === "block") {
+                    user_cr_el.style.display = "none";
+                } 
+
+            });
+
+            user_cr_btn_el.addEventListener('click', async () => {
+                if (user_menu_el.style.display === "block") {
+                    user_menu_el.style.display = "none";
+                } else {
+                    user_menu_el.style.display = "block";
+                }
+                user_cr_el.style.display = "block";
+
+            });
+
+            function retrieve_data(route) {
+                const XHR = new XMLHttpRequest();
+
+                XHR.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                        const user_list = JSON.parse(this.responseText);
+                        const total_users = user_list.length;
+
+                        for (var i=0; i<total_users; i++) {
+                            let curr_user = user_list[i];
+                            var new_row = table_usrs_el.insertRow(-1);
+
+                            var cell_fname = new_row.insertCell(0);
+                            var cell_surname = new_row.insertCell(1);
+                            var cell_button_select = new_row.insertCell(2);
+
+                            cell_fname.innerHTML = curr_user["first_name"];
+                            cell_surname.innerHTML = curr_user["surname"];
+
+                            cell_button_select.innerHTML = `<button class="user_select_button" onclick="change_user('${curr_user["id"]}')">Select</button>`;
+
+                            cell_button_select.style = "text-align: right";
+                        }
+
+                        // const table_sl_user = document.getElementById('user_selected');
+                        // table_sl_user.addEventListener('click', async () => {
+                        //     const selected_user = table_sl_user.dataset.user_id;
+                        //     console.log(selected_user);
+                        // });
+                    }
+                };
+                // Set up our request
+                XHR.open("GET", `https://192.168.1.101:8444/${route}/`);
+
+                // The data sent is what the user provided in the form
+                // XHR.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+                XHR.send();
+                // console.log(form_data);
+            }
+            
+
+            user_sl_btn_el.addEventListener('click', async () => {
+                retrieve_data("user_list")
+                if (user_menu_el.style.display === "block") {
+                    user_menu_el.style.display = "none";
+                } else {
+                    user_menu_el.style.display = "block";
+                }
+                user_sl_el.style.display = "block";
+            });
+
+            // });
+
+            // user_cr_sb_btn_el.addEventListener('click', async () => {
+            //     $('#user_create_submit_btn').click(function () { 
+            //         var data = {
+            //             first_name:$('#fname').val(),
+            //             last_name:$('#lname').val()
+            //         }
+            //     $.ajax({
+            //         type: "POST",
+            //         url: "https://192.168.1.101:8444/user_data/",
+            //         contentType:'application/json',
+            //         dataType: "json",
+            //         data:JSON.stringify(data),
+            //         success: function (result) {
+            //                 console.log(result);
+            //         }
+            //     }); });
+            // });
+
+            function send_data(form_data, route) {
+                const XHR = new XMLHttpRequest();
+
+                XHR.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                        // Behaviour if server was able to receive and insert user
+                        // console.log(this.responseText);
+                        if (user_cr_el.style.display === "block") {
+                            user_cr_el.style.display = "none";
+                        } 
+
+                        if (status_box_el.style.display === "none") {
+                            status_box_el.style.display = "block";
+                        } 
+
+                        setTimeout(function() {
+                            $('#status_box').fadeOut('fast');
+                        }, 5000); // <-- time in milliseconds
+
+                        
+                    }
+                };
+
+                // Set up our request
+                XHR.open("POST", `https://192.168.1.101:8444/${route}/`);
+
+                // The data sent is what the user provided in the form
+                XHR.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+                XHR.send(form_data);
+                // console.log(form_data);
+            }
+
+            const form = document.getElementById("user_create_form");
+            form.addEventListener( "submit", async () => {
+                event.preventDefault();
+                var form_data = $("form").serializeArray();
+                var json_form_data = JSON.stringify(form_data);
+                send_data(json_form_data, "user_create");
+            } );
+
+            scene.addEventListener('adapter-ready', ({ detail: adapter }) => {
+                // We don't use the syncOccupants API, set requestedOccupants to be the same array instance as availableOccupants
+                adapter.requestedOccupants = adapter.availableOccupants;
+                const clientId = genClientId(); // generate a random 16 characters string, but you can use a uuid4 for example
+                adapter.setClientId(clientId);
+                navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+                    adapter.setLocalMediaStream(stream).then(() => {
+                        // Note that networked-scene audio:true option has no effect with the janus adapter
+                        adapter.enableMicrophone(false); // set it to false if you want to be muted initially.
+                        state.currentStream = stream;
+                        adapter.setLocalMediaStream(stream);
+                    });
+                }).catch(err => {
+                    console.warn("Microphone access not allowed. This client will not broadcast audio.");
+                });
+            });
+        });
+
+    </script>
+
+    <script>
+        // Define custom schema for syncing avatar color, set by random-color
+        NAF.schemas.add({
+            template: '#avatar-template',
+            components: [
+                'position',
+                'rotation',
+                {
+                    selector: '.head',
+                    component: 'material',
+                    property: 'color'
+                }
+            ]
+        });
+        // Called by Networked-Aframe when connected to server
+        function onConnect() {
+            console.log("onConnect", new Date());
+        }
+    </script>
+</body>
+
+</html>

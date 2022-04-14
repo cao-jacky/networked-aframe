@@ -53,6 +53,7 @@ AFRAME.registerComponent('networked-video-source', {
         }
 
         this.videoTexture = new THREE.VideoTexture(this.video);
+        this.videoTexture.scale.x = -1;
 
         const mesh = this.el.getObject3D('mesh');
         mesh.material.map = this.videoTexture;
