@@ -2,7 +2,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Passthrough AR Experience</title>
+    <title>5GWebXR: Passthrough AR Experience</title>
     <meta name="description" content="HoloLens Experience">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
@@ -23,20 +23,18 @@
     <script src="https://kit.fontawesome.com/83f0ae3239.js" crossorigin="anonymous"></script>
 
     <link rel="stylesheet" href="/assets/css/passthrough_ar.css" type="text/css" media="all" crossorigin="anonymous">
-    
 </head>
 
 <body>
     <a-scene
-        mindar-image="imageTargetSrc: https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.4/examples/image-tracking/assets/card-example/card.mind; uiScanning: no"
+        mindar-image="imageTargetSrc: /markers/tree.mind; uiScanning: no"
         color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false"
         device-orientation-permission-ui="enabled: false" networked-scene="
         room: 1;
         debug: false;
         adapter: janus;
         connectOnLoad: true;
-        serverURL: wss://192.168.1.101:8989/janus;
-      ">
+        serverURL: wss://192.168.1.101:8989/janus;">
         <a-assets>
             <img id="card"
                 src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.4/examples/image-tracking/assets/card-example/card.png" />
@@ -48,29 +46,34 @@
 
             <template id="avatar-template" type="text/html">
                 <a-entity class="avatar" networked-audio-source>
-                  <a-plane id="camera_plane" color="#fff" width="4" height="3" position="0 .6 0" 
-                  rotation="0 0 0" material="side: back; opacity: 0.6" networked-video-source></a-plane>                  
+                    <a-plane id="avatarPlane" width="1.5" height="1.5" position="0 1 0" 
+                    rotation="0 0 0" material="side: front" networked-video-source></a-plane>                  
                 </a-entity>
+            </template>
+
+            <template id="content_template" type="text/html">
+                
+            </template>
+
+            <template id="test" type="text/html">
+                <a-plane position="0 0.3 0" id="data_item" material="side: double; color: #303971; transparent: true; opacity: 0.5" height="0.7" width="1" depth="0.01">
+                </a-plane>
             </template>
         
         </a-assets>
 
-        <a-camera look-controls="enabled: false" wasd-controls="enabled: false" position="0 0 0">
-            <!-- <a-entity geometry="primitive: plane; height: 0.2; width: 0.2" position="0 -2 -20"
-            material="color: gray; opacity: 0.5"></a-entity> -->                
-            <!-- <a-text position="0 0 -20" scale="1 1 1" value="Remote Support"></a-text> -->
+        <a-camera look-controls="enabled: false" wasd-controls="enabled: false" position="0 0 0" fit>
             <a-entity 
                 id="player" 
                 networked="template:#avatar-template;attachTemplateToLocal:false;" 
-                position="0 -5 -20" rotation="0 180 0">
+                position="0 -6 -20" rotation="0 0 0">
             </a-entity>
         </a-camera>
 
-        <a-entity mindar-image-target="targetIndex: 0">
-            <!-- <a-plane src="#card" position="0 0 0" height="0.552" width="1" rotation="0 0 0"></a-plane>
-            <a-gltf-model rotation="0 0 0 " position="0 0 0.1" scale="0.005 0.005 0.005" src="#avatarModel"
-                animation="property: position; to: 0 0.1 0.1; dur: 1000; easing: easeInOutQuad; loop: true; dir: alternate"> -->
-
+        <a-entity id="target0" mindar-image-target="targetIndex: 0">
+        <!-- <a-plane src="#card" position="0 0 0" height="0.552" width="1" rotation="0 0 0"></a-plane>
+        <a-gltf-model rotation="0 0 0 " position="0 0 0.1" scale="0.005 0.005 0.005" src="#avatarModel"
+            animation="property: position; to: 0 0.1 0.1; dur: 1000; easing: easeInOutQuad; loop: true; dir: alternate"> -->
             <a-entity position="0 0.3 0">
                 <a-plane id="data_item" material="side: double; color: #303971; transparent: true; opacity: 0.5" height="0.7" width="1" depth="0.01">
                     <a-text position="-0.47 0.25 0" scale="0.5 0.5 0.5" value="Computer"></a-text>
@@ -92,10 +95,11 @@
                     <a-plane material="side: double; color: #303971; transparent: true; opacity: 0.5;" position="0.39 0 0" height="0.2" width="0.2" depth="0.02"></a-plane>
                 </a-plane>
 
-            </a-entity>
-            
-
+            </a-entity>        
         </a-entity>
+
+    </a-entity>
+
 
     </a-scene>
 
@@ -467,6 +471,64 @@
 
     </script>
 
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const sceneEl = document.querySelector('a-scene');
+      const arSystem = sceneEl.systems["mindar-image-system"];
+      const target0 = document.querySelector('#target0');
+
+      // arReady event triggered when ready
+      sceneEl.addEventListener("arReady", (event) => {
+        // console.log("MindAR is ready")
+      });
+      // arError event triggered when something went wrong. Mostly browser compatbility issue
+      sceneEl.addEventListener("arError", (event) => {
+        // console.log("MindAR failed to start")
+      });
+      // detect target found
+      target0.addEventListener("targetFound", event => {
+        var test = target0.getAttribute('position');
+
+        marker1Pos = new THREE.Vector3();
+        console.log(target0.object3D.getWorldPosition(marker1Pos));
+
+        NAF.connection.broadcastData('augmentationStatus', 'Marker x has entered the frame');
+
+        var clients = NAF.connection.getConnectedClients();
+        console.log(clients);
+      });
+      // detect target lost
+      target0.addEventListener("targetLost", event => {
+        console.log("target lost");
+      });
+        });
+      </script>
+
+<script>
+    AFRAME.registerComponent('track-camera', {
+      tick: (function () {
+        const position = new THREE.Vector3();
+        const rotation = new THREE.Quaternion();
+        const euler = new THREE.Euler();
+        const matrix = new THREE.Matrix4();
+        return function () {
+          // local
+          // var position = this.el.getAttribute('position');
+          // var rotation = this.el.getAttribute('rotation');
+          // console.log("Position: " + position.x + " " + position.y + " " + position.z);
+          // console.log("Rotation: " + rotation.x + " " + rotation.y + " " + rotation.z);
+
+          this.el.object3D.updateMatrixWorld();
+          position.setFromMatrixPosition(this.el.object3D.matrixWorld); // Vector3
+          rotation.setFromRotationMatrix(matrix.extractRotation(this.el.object3D.matrixWorld ));
+          
+          console.log("Position: " + position.x + " " + position.y + " " + position.z);
+          console.log("Rotation: " + rotation.x + " " + rotation.y + " " + rotation.z);
+        }
+      })()
+    });
+  </script>
+
     <script>
         // Define custom schema for syncing avatar color, set by random-color
         NAF.schemas.add({
@@ -479,6 +541,13 @@
                     component: 'material',
                     property: 'color'
                 }
+            ]
+        });
+        NAF.schemas.add({
+            template: '#content_template',
+            components: [
+                'position',
+                'rotation'
             ]
         });
         // Called by Networked-Aframe when connected to server

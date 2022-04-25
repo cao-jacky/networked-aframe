@@ -11,10 +11,10 @@ const easyrtc = require("open-easyrtc");      // EasyRTC external module
 //easyrtc.setOption("logLevel", "debug");
 
 // Set process name
-process.title = "networked-aframe-server_ssl";
+process.title = "5GWebXR Web Server";
 
 // Get port or default to 8443
-const port = process.env.PORT || 8443;
+const port = process.env.PORT || 443;
 
 // Setup and configure Express https server.
 const app = express();
