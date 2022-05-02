@@ -32,6 +32,7 @@ Features
 --------
 * Support for WebRTC and/or WebSocket connections.
 * Voice chat. Audio streaming to let your users talk in-app (WebRTC only).
+* Video chat. See video streams in-app.
 * Bandwidth sensitive. Only send network updates when things change.
 * Cross-platform. Works on all modern Desktop and Mobile browsers. Oculus Rift, Oculus Quest, HTC Vive and Google Cardboard.
 * Extendable. Sync any A-Frame component, including your own, without changing the component code at all.
@@ -72,7 +73,7 @@ Basic Example
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.slim.js"></script>
     <script src="/easyrtc/easyrtc.js"></script>
-    <script src="https://unpkg.com/networked-aframe/dist/networked-aframe.min.js"></script>
+    <script src="https://unpkg.com/networked-aframe@^0.8.0/dist/networked-aframe.min.js"></script>
   </head>
   <body>
     <a-scene networked-scene>
@@ -91,7 +92,7 @@ Basic Example
 More Examples
 -------------
 
-Open in two tabs if nobody else is online.
+Open in two tabs if nobody else is online, or [remix the code examples yourself](https://glitch.com/edit/#!/remix/naf-examples).
 
 * [Basic](https://naf-examples.glitch.me/basic.html)
 * [Basic with 4 clients](https://naf-examples.glitch.me/basic-4.html)
@@ -372,8 +373,8 @@ List of the supported adapters:
 | Adapter | Description | Supports Audio/Video | WebSockets or WebRTC | How to start |
 | -------- | ----------- | ------------- | ----------- | ---------- |
 | wseasyrtc | DEFAULT - Uses the [open-easyrtc](https://github.com/open-easyrtc/open-easyrtc) library | No | WebSockets | `npm run dev` |
-| easyrtc | Uses the [open-easyrtc](https://github.com/open-easyrtc/open-easyrtc) library | Audio and Camera (no screen share) | WebRTC | `npm run dev` |
-| janus | Uses the [Janus WebRTC server](https://github.com/meetecho/janus-gateway) and [janus-plugin-sfu](https://github.com/mozilla/janus-plugin-sfu) | Audio and Video (camera or screen share) | WebRTC | See [naf-janus-adapter](https://github.com/networked-aframe/naf-janus-adapter/tree/3.0.x) |
+| easyrtc | Uses the [open-easyrtc](https://github.com/open-easyrtc/open-easyrtc) library | Audio and Video (camera and screen share) | WebRTC | `npm run dev` |
+| janus | Uses the [Janus WebRTC server](https://github.com/meetecho/janus-gateway) and [janus-plugin-sfu](https://github.com/mozilla/janus-plugin-sfu) | Audio and Video (camera OR screen share) | WebRTC | See [naf-janus-adapter](https://github.com/networked-aframe/naf-janus-adapter/tree/3.0.x) |
 | socketio | SocketIO implementation without external library (work in progress, currently no maintainer) | No | WebSockets | `npm run dev-socketio` |
 | webrtc | Native WebRTC implementation without external library (work in progress, currently no maintainer) | Audio | WebRTC | `npm run dev-socketio` |
 | Firebase | [Firebase](https://firebase.google.com/) for WebRTC signalling (currently no maintainer) | No | WebRTC | See [naf-firebase-adapter](https://github.com/networked-aframe/naf-firebase-adapter) |
@@ -382,6 +383,8 @@ List of the supported adapters:
 WebRTC in the table means that component updates is using WebRTC Datachannels
 (UDP) instead of the WebSocket (TCP). You still have a WebSocket for the signaling
 part.
+
+See also the document [NAF adapters comparison](https://github.com/networked-aframe/networked-aframe/wiki/NAF-adapters-comparison).
 
 ### Audio
 
@@ -413,6 +416,24 @@ NAF.connection.adapter.enableCamera(enabled)
 ```
 
 where `enabled` is `true` or `false`.
+
+With the easyrtc adapter, you can add an additional video track like a screen
+share with the `addLocalMediaStream` and `removeLocalMediaStream` API:
+
+```javascript
+navigator.mediaDevices.getDisplayMedia().then((stream) => {
+  NAF.connection.adapter.addLocalMediaStream(stream, "screen");
+});
+```
+
+```javascript
+NAF.connection.adapter.removeLocalMediaStream("screen");
+```
+
+See the [Multi Streams](https://github.com/networked-aframe/networked-aframe/blob/master/examples/basic-multi-streams.html) example
+that uses a second plane with `networked-video-source="streamName: screen"` to
+show the screen share to the other participants.
+Be sure to look at the comments at the end of the html file of this example for known issues.
 
 ### Misc
 

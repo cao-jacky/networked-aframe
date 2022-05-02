@@ -39,7 +39,9 @@
     <a-scene networked-scene="
       room: basic-video;
       debug: true;
-      adapter: easyrtc; 
+      adapter: easyrtc;
+      audio: false;
+      video: true;
     ">
       <a-assets>
 
@@ -144,10 +146,14 @@
     <style>.photoview{position:absolute;bottom:15%;left:3%;height:108px;width:192px;}.camera-btn{position:relative;cursor:pointer;bottom:8%;left:3%;background:#fff;height:30px;width:90px;border-radius:10px}
     </style>
 
+    <div class="actions">
+      <button id="camera-btn" type="button" class="button">Hide Camera</button>
+    </div>
+
     <script>
       // Camera status
       let cameraEnabled = true;
-      // Camera button ele
+      // Camera button element
       const cameraBtnEle = document.getElementById('camera-btn');
 
       // On mobile remove elements that are resource heavy
@@ -157,13 +163,11 @@
         const particles = document.getElementById('particles');
         particles.parentNode.removeChild(particles);
       }
-    </script>
 
-    <script>
       // Define custom schema for syncing avatar color, set by random-color
       NAF.schemas.add({
         template: '#avatar-template',
-        components: [        
+        components: [
           'position',
           'rotation'
         ]
@@ -177,7 +181,7 @@
         cameraBtnEle.addEventListener('click', function() {
           NAF.connection.adapter.enableCamera(!cameraEnabled);
           cameraEnabled = !cameraEnabled;
-          cameraBtnEle.textContent = cameraEnabled ? 'Hide Cam' : 'Show Cam';
+          cameraBtnEle.textContent = cameraEnabled ? 'Hide Camera' : 'Show Camera';
         });
       }
       var video = document.getElementById('video');
