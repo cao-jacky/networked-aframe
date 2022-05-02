@@ -161,6 +161,15 @@
                                     rotation="0 0 0" material="side: front; transparent: true" networked-video-source></a-plane>                  
                                     </a-entity>
                                 </template>
+                                
+                                <template id="marker-template" type="text/html">
+                                    <a-entity>
+                                        <a-plane id="data_item" material="side: double; color: #303971; transparent: true; opacity: 0.5" height="0.7" width="1" depth="0.01">
+                                            <a-text position="-0.47 0.25 0" scale="0.5 0.5 0.5" value="Computer"></a-text>
+                                            <a-text position="-0.46 0.13 0" wrap-count="26" scale="0.15 0.15 0.15" value="Use this computer to set the settings of the laser cutter."></a-text>
+                                        </a-plane>
+                                    </a-entity>
+                                </template>
 
                                 <template id="content_template" type="text/html">
                                     <a-entity position="0 0.3 0">

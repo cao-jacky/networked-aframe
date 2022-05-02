@@ -6,9 +6,14 @@
     <meta name="description" content="HoloLens Experience">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image.prod.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image.prod.js"></script> -->
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-aframe.prod.js"></script>
+
+    <script src='/aframe/aframe-ar-nft.js'></script>
+    <script src="https://raw.githack.com/fcor/arjs-gestures/master/dist/gestures.js"></script>
+
+
+    <!-- <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-aframe.prod.js"></script> -->
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 
@@ -27,9 +32,12 @@
 
 <body>
     <a-scene
-        mindar-image="imageTargetSrc: /markers/tree.mind; uiScanning: no"
-        color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false"
-        device-orientation-permission-ui="enabled: false" networked-scene="
+        arjs="trackingMethod: best; sourceType: webcam;debugUIEnabled: false; sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+        color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" 
+        vr-mode-ui="enabled: false"
+        device-orientation-permission-ui="enabled: false" 
+        gesture-detector
+        networked-scene="
         room: 1;
         debug: false;
         adapter: janus;
@@ -51,10 +59,6 @@
                 </a-entity>
             </template>
 
-            <template id="content_template" type="text/html">
-                
-            </template>
-
             <template id="test" type="text/html">
                 <a-plane position="0 0.3 0" id="data_item" material="side: double; color: #303971; transparent: true; opacity: 0.5" height="0.7" width="1" depth="0.01">
                 </a-plane>
@@ -68,34 +72,49 @@
                 networked="template:#avatar-template;attachTemplateToLocal:false;" 
                 position="0 -6 -20" rotation="0 0 0">
             </a-entity>
+
+    
+            <!-- <a-marker type="barcode" size="0.06" value="0" id="marker0" registerevents>
+                <a-entity id="markerContent" scale="4 2 4" rotation="-45 0 0" gesture-handler >
+                    <a-entity >
+                        <a-plane id="markerPlane" material="side: double; color: #303971; transparent: true; opacity: 0.75" height="0.7" width="1" depth="0.01">
+                            <a-text id="markerTitle" position="-0.47 0.25 0.02" scale="0.5 0.5 0.5" value="Computer"></a-text>
+                            <a-text id="markerContent" position="-0.46 0.13 0.02" wrap-count="26" scale="0.15 0.15 0.15" value="Use this computer to set the settings of the laser cutter."></a-text>
+                        </a-plane>
+                    </a-entity>
+        
+                    <a-circle material="side: double; color: #303971; transparent: true; opacity: 0.5" position="-0.7 0 0" radius="0.1">
+                        <a-image src="#chevron" material="alphaTest: 0.5" position="0 0 0.01" width="1" scale="0.1 0.1 0.1" rotation="0 180 0"></a-image>
+                    </a-circle>
+    
+                    <a-circle material="side: double; color: #303971; transparent: true; opacity: 0.5" position="0.7 0 0" radius="0.1">
+                        <a-image src="#chevron" material="alphaTest: 0.5" position="0 0 0.01" width="1" scale="0.1 0.1 0.1" rotation="0 0 0"></a-image>
+                    </a-circle>
+        
+                    <a-plane material="side: double; color: #303971; transparent: true; opacity: 0" position="0 -0.5 0" height="0.2" width="1" depth="0.01">
+                        <a-plane material="side: double; color: #303971; transparent: true; opacity: 0.5;" position="-0.39 0 0" height="0.2" width="0.2" depth="0.02"></a-plane>
+                        <a-plane material="side: double; color: #303971; transparent: true; opacity: 0.5;" position="-0.13 0 0" height="0.2" width="0.2" depth="0.02"></a-plane>
+                        <a-plane material="side: double; color: #303971; transparent: true; opacity: 0.5;" position="0.13 0 0" height="0.2" width="0.2" depth="0.02"></a-plane>
+                        <a-plane material="side: double; color: #303971; transparent: true; opacity: 0.5;" position="0.39 0 0" height="0.2" width="0.2" depth="0.02"></a-plane>
+                    </a-plane>
+                </a-entity>
+            </a-marker> -->
+
+            <!-- <a-marker type="barcode" size="0.06" value="1" id="stextA" registerevents>
+                <a-entity
+                    position="0 0 0"
+                    scale="0.05 0.05 0.05"
+                    gltf-model="https://arjs-cors-proxy.herokuapp.com/https://raw.githack.com/AR-js-org/AR.js/master/aframe/examples/image-tracking/nft/trex/scene.gltf"
+                    ></a-entity>
+            </a-marker> -->
+
         </a-camera>
-
-        <a-entity id="target0" mindar-image-target="targetIndex: 0">
-        <!-- <a-plane src="#card" position="0 0 0" height="0.552" width="1" rotation="0 0 0"></a-plane>
-        <a-gltf-model rotation="0 0 0 " position="0 0 0.1" scale="0.005 0.005 0.005" src="#avatarModel"
-            animation="property: position; to: 0 0.1 0.1; dur: 1000; easing: easeInOutQuad; loop: true; dir: alternate"> -->
-            <a-entity position="0 0.3 0">
-                <a-plane id="data_item" material="side: double; color: #303971; transparent: true; opacity: 0.5" height="0.7" width="1" depth="0.01">
-                    <a-text position="-0.47 0.25 0" scale="0.5 0.5 0.5" value="Computer"></a-text>
-                    <a-text position="-0.46 0.13 0" wrap-count="26" scale="0.15 0.15 0.15" value="Use this computer to set the settings of the laser cutter."></a-text>
-                </a-plane>
-    
-                <a-circle material="side: double; color: #303971; transparent: true; opacity: 0.5" position="-0.7 0 0" radius="0.1">
-                    <a-image src="#chevron" material="alphaTest: 0.5" position="0 0 0.01" width="1" scale="0.1 0.1 0.1" rotation="0 180 0"></a-image>
-                </a-circle>
-
-                <a-circle material="side: double; color: #303971; transparent: true; opacity: 0.5" position="0.7 0 0" radius="0.1">
-                    <a-image src="#chevron" material="alphaTest: 0.5" position="0 0 0.01" width="1" scale="0.1 0.1 0.1" rotation="0 0 0"></a-image>
-                </a-circle>
-    
-                <a-plane material="side: double; color: #303971; transparent: true; opacity: 0" position="0 -0.5 0" height="0.2" width="1" depth="0.01">
-                    <a-plane material="side: double; color: #303971; transparent: true; opacity: 0.5;" position="-0.39 0 0" height="0.2" width="0.2" depth="0.02"></a-plane>
-                    <a-plane material="side: double; color: #303971; transparent: true; opacity: 0.5;" position="-0.13 0 0" height="0.2" width="0.2" depth="0.02"></a-plane>
-                    <a-plane material="side: double; color: #303971; transparent: true; opacity: 0.5;" position="0.13 0 0" height="0.2" width="0.2" depth="0.02"></a-plane>
-                    <a-plane material="side: double; color: #303971; transparent: true; opacity: 0.5;" position="0.39 0 0" height="0.2" width="0.2" depth="0.02"></a-plane>
-                </a-plane>
-
-            </a-entity>        
+        
+            
+            <!-- <a-marker type="barcode" size="0.06" value="10" id="ttextA" registerevents>
+                <a-entity >
+                </a-entity>
+            </a-marker> -->
         </a-entity>
 
     </a-entity>
@@ -472,61 +491,184 @@
     </script>
 
 <script>
+    function retrieve_data(route) {
+        const XHR = new XMLHttpRequest();
+
+        XHR.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                const returned_data = JSON.parse(this.responseText);
+                const num_items = returned_data.length;
+
+                if (route == "marker_ids") {
+                    // create markers programatically from data returned from server
+                    const camera = document.querySelector('a-camera');
+                    const sceneEl = document.querySelector('a-scene');
+
+                    for (var i=0; i<num_items; i++) {
+                        let curr_marker = returned_data[i];
+                        let cm_value = curr_marker.marker_value;
+                        let cm_id = curr_marker.marker_id;
+                        console.log(cm_value, cm_id);
+
+                        // create marker to be recognised
+                        const newMarker = document.createElement("a-marker");
+                        newMarker.setAttribute("type", "barcode");
+                        newMarker.setAttribute("value", cm_value);
+                        newMarker.setAttribute("id", cm_id);
+                        newMarker.setAttribute("registerevents", "");
+                        sceneEl.appendChild(newMarker);
+                    }
+
+                }
+                // const user_list = JSON.parse(this.responseText);
+                // const total_users = user_list.length;
+
+                // for (var i=0; i<total_users; i++) {
+                //     let curr_user = user_list[i];
+                //     var new_row = table_usrs_el.insertRow(-1);
+
+                //     var cell_fname = new_row.insertCell(0);
+                //     var cell_surname = new_row.insertCell(1);
+                //     var cell_button_select = new_row.insertCell(2);
+
+                //     cell_fname.innerHTML = curr_user["first_name"];
+                //     cell_surname.innerHTML = curr_user["surname"];
+
+                //     cell_button_select.innerHTML = `<button class="user_select_button" onclick="change_user('${curr_user["id"]}')">Select</button>`;
+
+                //     cell_button_select.style = "text-align: right";
+                // }
+
+                // const table_sl_user = document.getElementById('user_selected');
+                // table_sl_user.addEventListener('click', async () => {
+                //     const selected_user = table_sl_user.dataset.user_id;
+                //     console.log(selected_user);
+                // });
+            }
+        };
+        // Set up our request
+        XHR.open("GET", `https://192.168.1.101:8444/${route}/`);
+
+        // The data sent is what the user provided in the form
+        // XHR.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        XHR.send();
+        // console.log(form_data);
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
-      const sceneEl = document.querySelector('a-scene');
-      const arSystem = sceneEl.systems["mindar-image-system"];
-      const target0 = document.querySelector('#target0');
+        // request from the database, the shortlist of IDs
+        retrieve_data("marker_ids");
 
-      // arReady event triggered when ready
-      sceneEl.addEventListener("arReady", (event) => {
-        // console.log("MindAR is ready")
-      });
-      // arError event triggered when something went wrong. Mostly browser compatbility issue
-      sceneEl.addEventListener("arError", (event) => {
-        // console.log("MindAR failed to start")
-      });
-      // detect target found
-      target0.addEventListener("targetFound", event => {
-        var test = target0.getAttribute('position');
+        // document.body.appendChild(sceneEl);
 
-        marker1Pos = new THREE.Vector3();
-        console.log(target0.object3D.getWorldPosition(marker1Pos));
 
-        NAF.connection.broadcastData('augmentationStatus', 'Marker x has entered the frame');
+        // sceneEl.addEventListener("onefingermove", (event) => {
+        //     console.log("rotation")
+        // });
 
-        var clients = NAF.connection.getConnectedClients();
-        console.log(clients);
-      });
-      // detect target lost
-      target0.addEventListener("targetLost", event => {
-        console.log("target lost");
-      });
+    //   const arSystem = sceneEl.systems["mindar-image-system"];
+    //   const target0 = document.querySelector('#target0');
+
+    //   // arReady event triggered when ready
+    //   sceneEl.addEventListener("arReady", (event) => {
+    //     // console.log("MindAR is ready")
+    //   });
+    //   // arError event triggered when something went wrong. Mostly browser compatbility issue
+    //   sceneEl.addEventListener("arError", (event) => {
+    //     // console.log("MindAR failed to start")
+    //   });
+    //   // detect target found
+    //   target0.addEventListener("targetFound", event => {
+    //     var test = target0.getAttribute('position');
+
+    //     marker1Pos = new THREE.Vector3();
+    //     console.log(target0.object3D.getWorldPosition(marker1Pos));
+
+    //     NAF.connection.broadcastData('augmentationStatus', 'Marker x has entered the frame');
+
+    //     var clients = NAF.connection.getConnectedClients();
+    //     console.log(clients);
+    //   });
+    //   // detect target lost
+    //   target0.addEventListener("targetLost", event => {
+    //     console.log("target lost");
+    //   });
         });
-      </script>
+</script>
 
 <script>
-    AFRAME.registerComponent('track-camera', {
-      tick: (function () {
-        const position = new THREE.Vector3();
-        const rotation = new THREE.Quaternion();
-        const euler = new THREE.Euler();
-        const matrix = new THREE.Matrix4();
-        return function () {
-          // local
-          // var position = this.el.getAttribute('position');
-          // var rotation = this.el.getAttribute('rotation');
-          // console.log("Position: " + position.x + " " + position.y + " " + position.z);
-          // console.log("Rotation: " + rotation.x + " " + rotation.y + " " + rotation.z);
+    // AFRAME.registerComponent('track-camera', {
+    //   tick: (function () {
+    //     const position = new THREE.Vector3();
+    //     const rotation = new THREE.Quaternion();
+    //     const euler = new THREE.Euler();
+    //     const matrix = new THREE.Matrix4();
+    //     return function () {
+    //       // local
+    //       // var position = this.el.getAttribute('position');
+    //       // var rotation = this.el.getAttribute('rotation');
+    //       // console.log("Position: " + position.x + " " + position.y + " " + position.z);
+    //       // console.log("Rotation: " + rotation.x + " " + rotation.y + " " + rotation.z);
 
-          this.el.object3D.updateMatrixWorld();
-          position.setFromMatrixPosition(this.el.object3D.matrixWorld); // Vector3
-          rotation.setFromRotationMatrix(matrix.extractRotation(this.el.object3D.matrixWorld ));
+    //       this.el.object3D.updateMatrixWorld();
+    //       position.setFromMatrixPosition(this.el.object3D.matrixWorld); // Vector3
+    //       rotation.setFromRotationMatrix(matrix.extractRotation(this.el.object3D.matrixWorld ));
           
-          console.log("Position: " + position.x + " " + position.y + " " + position.z);
-          console.log("Rotation: " + rotation.x + " " + rotation.y + " " + rotation.z);
-        }
-      })()
-    });
+    //       console.log("Position: " + position.x + " " + position.y + " " + position.z);
+    //       console.log("Rotation: " + rotation.x + " " + rotation.y + " " + rotation.z);
+    //     }
+    //   })()
+    // });
+    AFRAME.registerComponent('registerevents', {
+            init: function () {
+                var marker = this.el;
+                marker.setAttribute('emitevents', 'true'); 
+                marker.addEventListener('markerFound', function () {
+                    var markerId = marker.id;
+                    console.log('markerFound', markerId);
+                    // $.ajax({
+                    //     type: "POST",
+                    //     url: "https://5gwebar.5gear.net:8080/",
+                    //     contentType: "application/json",
+                    //     data: JSON.stringify({
+                    //         markerId: markerId
+                    //     }),
+                    //     success: function (data) {
+                    //         var t = JSON.parse(data);
+                    //         console.log(data);
+                    //         var htmlstr = JSON.parse(t['payload']);
+                    //         document.getElementById(markerId).innerHTML = htmlstr['response'];
+                    //         // document.querySelector("#" + markerId + ' a-entity').setAttribute('rotation', "270 0 0");
+                    //         //document.querySelector("#" + markerId + ' a-video').play();
+                    //     },
+                    //     dataType: "text"
+                    // }).done(function (data) {
+                    // });
+                    const camera = document.querySelector('a-camera');
+                    let cameraPosition = camera.object3D.position;
+                    let markerPosition = marker.object3D.position;
+                    let distance = cameraPosition.distanceTo(markerPosition)
+
+                    // check = setInterval(() => {
+                    //     cameraPosition = camera.object3D.position;
+                    //     markerPosition = marker.object3D.position;
+                    //     distance = cameraPosition.distanceTo(markerPosition)
+
+                    //     // do what you want with the distance:
+                    //     console.log(distance);
+                    // }, 100);
+                });
+
+                marker.addEventListener('markerLost', function () {
+                    var markerId = marker.id;
+                    console.log('markerLost', markerId); 
+                    // document.querySelector("#" + markerId + ' a-entity a-video').getAttribute('src')="";
+                    document.getElementById(markerId).innerHTML = ''; 
+                    // clearInterval(check);
+                  
+                });
+            }
+        });
   </script>
 
     <script>
@@ -544,16 +686,17 @@
             ]
         });
         NAF.schemas.add({
-            template: '#content_template',
+            template: '#marker-template',
             components: [
                 'position',
-                'rotation'
+                'rotation',
             ]
         });
         // Called by Networked-Aframe when connected to server
         function onConnect() {
             console.log("onConnect", new Date());
         }
+        
     </script>
 </body>
 

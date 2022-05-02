@@ -43,13 +43,36 @@ async function user_insert(user) {
     }
 }
 
+async function marker_insert() {
+	try {
+		await client.connect();
+		const database = client.db("5gwebxr");
+		const marker_details = database.collection("markers");
+
+		const marker = {
+			marker_value: "0",
+			marker_id: "fablab_computer",
+			marker_title: "computer",
+			cards: [{
+				card_id: "0",
+				card_content: "test"
+			}]
+		}
+
+		const result = await marker_details.insertOne(marker);
+		console.log(`A document was inserted with the _id: ${result.insertedId}`);
+	} finally {
+		await client.close();
+	}
+}
+
 function iterateFunc(doc) {
     console.log(JSON.stringify(doc, null, 4));
- }
+}
  
- function errorFunc(error) {
+function errorFunc(error) {
     console.log(error);
- }
+}
 
 async function user_retrieve() {
     try {
@@ -66,6 +89,35 @@ async function user_retrieve() {
             users.push(curr_user);
         }
         return users; 
+      } finally {
+        await client.close();
+      }
+}
+
+async function marker_retrieve(types_to_retrieve) {
+    try {
+        await client.connect();
+        const database = client.db("5gwebxr");
+        const markers_retrieved = database.collection("markers");
+
+		if (types_to_retrieve == "ids") {
+			project_string = {_id: 0, marker_value: 1, marker_id: 1};
+		}
+    
+        const result = await markers_retrieved
+			.find()
+			.project(project_string)
+			.toArray();
+        const result_total = result.length;
+
+		console.log(result);
+        
+        var markers = [];
+        for (var i=0; i<result_total; i++) {
+            curr_marker = JSON.parse(JSON.stringify(result[i], null, 4));
+            markers.push(curr_marker);
+        }
+        return markers; 
       } finally {
         await client.close();
       }
@@ -92,6 +144,16 @@ app.get('/user_list', (req, res) => {
         res.send(result);
         console.log("Sent user list to requesting client")
      })
+});
+
+app.get('/marker_ids', (req, res) => {
+	let marker_lists = marker_retrieve("ids");
+	marker_lists.then(function(result) {
+		res.status(200)
+        res.send(result);
+		console.log("Sent marker IDs to client");
+	})
+	// marker_insert();
 });
 
 var httpsServer = https.createServer(credentials, app);
