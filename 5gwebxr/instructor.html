@@ -6,11 +6,13 @@
     <meta name="description" content="HoloLens Experience">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image.prod.js"></script>
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-aframe.prod.js"></script>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script
+        src="https://unpkg.com/aframe-environment-component@1.1.0/dist/aframe-environment-component.min.js"></script>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 
     <script src="https://unpkg.com/networked-aframe@^0.9.0/dist/networked-aframe.min.js"
         crossorigin="anonymous"></script>
@@ -23,7 +25,7 @@
     <script src="https://kit.fontawesome.com/83f0ae3239.js" crossorigin="anonymous"></script>
 
     <link rel="stylesheet" href="/assets/css/instructor.css" type="text/css" media="all" crossorigin="anonymous">
-    
+
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -31,190 +33,430 @@
 
     <link rel="stylesheet" href="assets/css/main.css" />
     <script>
-        NAF.connection.subscribeToDataChannel('reliableBroadcast', function() {
-          var label = document.getElementById('reliable-broadcast');
-          label.innerHTML = 'success';
-          label.className = 'success';
+        NAF.connection.subscribeToDataChannel('reliableBroadcast', function () {
+            var label = document.getElementById('reliable-broadcast');
+            label.innerHTML = 'success';
+            label.className = 'success';
         });
-  
-        NAF.connection.subscribeToDataChannel('augmentationStatus', function(senderId, dataType, data, targetObj) {
-          var label = document.getElementById('unreliable-broadcast');
-          label.innerHTML = 'success';
-          label.className = 'success';
-          console.log(data);
+
+        NAF.connection.subscribeToDataChannel('augmentationStatus', function (senderId, dataType, data, targetObj) {
+            var label = document.getElementById('unreliable-broadcast');
+            label.innerHTML = 'success';
+            label.className = 'success';
+            console.log(data);
         });
-  
-        NAF.connection.subscribeToDataChannel('reliableSend', function() {
-          var label = document.getElementById('reliable-send');
-          label.innerHTML = 'success';
-          label.className = 'success';
+
+        NAF.connection.subscribeToDataChannel('reliableSend', function () {
+            var label = document.getElementById('reliable-send');
+            label.innerHTML = 'success';
+            label.className = 'success';
         });
-  
-        NAF.connection.subscribeToDataChannel('unreliableSend', function() {
-          var label = document.getElementById('unreliable-send');
-          label.innerHTML = 'success';
-          label.className = 'success';
+
+        NAF.connection.subscribeToDataChannel('unreliableSend', function () {
+            var label = document.getElementById('unreliable-send');
+            label.innerHTML = 'success';
+            label.className = 'success';
         });
-      </script>
+
+        function click_manager(el, el_clicked_id) {
+            // function to deal with whichever button is clicked
+            console.log(el_clicked_id);
+
+            // behaviour if a marker is selected to be visualised
+            let if_selecting_marker = el_clicked_id.includes("select_marker");
+            if (if_selecting_marker) {
+                let selected_marker = el_clicked_id;
+                let selected_marker_id = document.getElementById(`${selected_marker}_text`).getAttribute("marker_id");
+
+                // get entire marker data from IndexedDB
+                var db_open_request = window.indexedDB.open('markers_db', 1);
+                db_open_request.onsuccess = function (event) {
+
+                    // store the result of opening the database in the db variable.
+                    db = db_open_request.result;
+                    var transaction = db.transaction(["markers_os"], "readwrite");
+                    var object_store = transaction.objectStore("markers_os");
+
+                    var cur_val_index = object_store.index('marker_id')
+                    var object_store_req = cur_val_index.get(selected_marker_id);
+
+                    object_store_req.onsuccess = function (event) {
+                        // set the marker card viewer contents once pulled from DB
+                        var marker_contents = object_store_req.result;
+
+                        // set card title
+                        let vm_title = document.getElementById("view_marker_title");
+                        vm_title.setAttribute("value", marker_contents.marker_title);
+
+                        // set card contents
+                        let marker_card_content = marker_contents.cards;
+
+                        // store card contents as an attribute of the background plane
+                        var card_data_str = encodeURIComponent(JSON.stringify(marker_card_content));
+                        $("#view_marker_plane").attr("marker_card_data", card_data_str);
+
+                        let first_card = marker_card_content[0];
+                        $("#view_marker_card_text").attr("value", first_card.card_content);
+
+                        // set selectors to either be off or indicate what card number next/before
+                        let vm_left_marker = document.getElementById("view_marker_left_select");
+                        vm_left_marker.setAttribute("onhover", "disabled: true");
+                        vm_left_marker.setAttribute("color", "#d8d8d8");
+                        vm_left_marker.setAttribute("select_card_id", "-1");
+
+                        let vm_right_marker = document.getElementById("view_marker_right_select");
+                        // check number of cards, if more than one, show next arrow button
+                        let cards_len = marker_card_content.length;
+                        let right_onhover = "disabled: true";
+                        let right_color = "#d8d8d8";
+                        if (cards_len > 1) {
+                            right_onhover = "disabled: false";
+                            right_color = "#303971";
+                            vm_right_marker.setAttribute("select_card_id", "1");
+                        }
+                        vm_right_marker.setAttribute("onhover", right_onhover);
+                        vm_right_marker.setAttribute("color", right_color);
+
+                        // set the status of current card out of x
+                        $("#card_tracker").attr("value", `${1}/${cards_len}`);
+
+                        // set the marker image for the instructor to view 
+                        $("#view_mb_image").attr("src", `assets/barcodes/${marker_contents.marker_value}.png`);
+
+                        // turn on the edit card buttons for edit
+                        let edit_button = document.getElementById("editEditBtn");
+                        edit_button.setAttribute("onhover", "disabled: false");
+                        edit_button.setAttribute("color", "#303971");
+
+                        // let save_button = document.getElementById("editSaveBtn");
+                        // save_button.setAttribute("onhover", "disabled: false");
+                        // save_button.setAttribute("color", "#303971");
+                    };
+                };
+
+            }
+
+            // behaviour if selecting previous/next buttons on card
+            const card_select_conditions = ["view_marker_", "_select"];
+            let card_arrow_select = card_select_conditions.some(el => el_clicked_id.includes(el));
+            card_selector: if (card_arrow_select) {
+                // pull the select_card_id attribute from the arrow 
+                let card_arrow_selected = document.getElementById(el_clicked_id).getAttribute("select_card_id");
+
+                // check if the arrow is disabled, i.e., onhover? 
+                if (parseInt(card_arrow_selected) < 0) {
+                    // if first card or last card, don't do anything
+                    break card_selector;
+                }
+
+                // pull the data stored on the background plane of the card
+                var data_str = $("#view_marker_plane").attr("marker_card_data");
+                var card_data = JSON.parse(decodeURIComponent(data_str));
+
+                // load the correct card onto the plane text
+                var next_card = card_data[card_arrow_selected];
+                $("#view_marker_card_text").attr("value", next_card.card_content);
+
+                // set the new left and right arrows
+                let vm_left_marker = document.getElementById("view_marker_left_select");
+
+                let left_onhover = "disabled: false";
+                let left_color = "#303971";
+
+                // check if going back one card would be the first card
+                if (parseInt(card_arrow_selected) - 1 < 0) {
+                    left_onhover = "disabled: true";
+                    left_color = "#d8d8d8";
+                }
+
+                vm_left_marker.setAttribute("onhover", left_onhover);
+                vm_left_marker.setAttribute("color", left_color);
+                vm_left_marker.setAttribute("select_card_id", parseInt(card_arrow_selected) - 1);
+
+                let vm_right_marker = document.getElementById("view_marker_right_select");
+                let right_onhover = "disabled: true";
+                let right_color = "#d8d8d8";
+
+                // check number of cards, if more than the current new ID, show next arrow button
+                let cards_len = card_data.length;
+                if (cards_len - 1 > card_arrow_selected) {
+                    right_onhover = "disabled: false";
+                    right_color = "#303971";
+                    vm_right_marker.setAttribute("select_card_id", parseInt(card_arrow_selected) + 1);
+                }
+                vm_right_marker.setAttribute("onhover", right_onhover);
+                vm_right_marker.setAttribute("color", right_color);
+
+                // changing the current card number out of total on card_tracker
+                $("#card_tracker").attr("value", `${parseInt(card_arrow_selected) + 1}/${cards_len}`);
+            }
+        
+            // 
+        }
+
+        AFRAME.registerComponent('onhover', {
+            schema: {
+                disabled: { default: false },
+                color: { type: 'color', default: '#303971' },
+                opacity: { default: '0.5' }
+            },
+
+            init: function () {
+                var self = this;
+                this.eventHandlerFn = function () { console.log(self.data.message); };
+
+                var data = this.data;
+                var el = this.el;
+                var defaultColor = el.getAttribute('material').color;
+                var defaultOpacity = el.getAttribute('material').opacity;
+
+                el.addEventListener('click', function () {
+                    var el_clicked_id = el.id;
+                    // check if click is disabled on element
+                    click_manager(el, el_clicked_id);
+
+                });
+
+                el.addEventListener('mouseenter', function () {
+                    if (!data.disabled) {
+                        el.setAttribute('color', "#6b9cf0");
+                        el.setAttribute('opacity', 1);
+                    }
+                    // console.log("Selecting " + el.id);
+                });
+
+                el.addEventListener('mouseleave', function () {
+                    if (!data.disabled) {
+                        el.setAttribute('color', defaultColor);
+                        el.setAttribute('opacity', defaultOpacity);
+                    }
+                    // console.log("Not selecting " + el.id + " anymore");
+                });
+            },
+            update: function (old_data) {
+                var data = this.data;
+                var el = this.el;
+
+                var defaultColor = data.color;
+                var defaultOpacity = data.opacity;
+
+                if (Object.keys(old_data).length === 0) { return; }
+
+                if (old_data.color !== data.color) {
+                    el.removeEventListener('mouseenter', this.eventHandlerFn);
+                    el.removeEventListener('mouseleave', this.eventHandlerFn);
+                }
+
+                if (data.color) {
+                    el.addEventListener('mouseenter', function () {
+                        if (!data.disabled) {
+                            el.setAttribute('color', "#6b9cf0");
+                            el.setAttribute('opacity', 1);
+                        }
+                    });
+                    el.addEventListener('mouseleave', function () {
+                        if (!data.disabled) {
+                            el.setAttribute('color', defaultColor);
+                            el.setAttribute('opacity', defaultOpacity);
+                        }
+                    });
+                } else {
+                    // console.log(data.message);
+                }
+
+
+            }
+        });
+
+        document.addEventListener("keypress", function (event) {
+            console.log(event.keyCode);
+        });
+    </script>
 </head>
 
-<body class="is-preload homepage">
-    <div id="page-wrapper">
-        <div id="header-wrapper">
-            <header id="header" class="container">
+<body>
+    <a-scene
+        mindar-image="imageTargetSrc: https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.4/examples/image-tracking/assets/card-example/card.mind; uiScanning: no"
+        color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false"
+        device-orientation-permission-ui="enabled: false" networked-scene="
+        room: 1;
+        debug: false;
+        adapter: janus;
+        connectOnLoad: true;
+        serverURL: wss://192.168.1.101:8989/janus; ">
 
-                <!-- Logo -->
-                    <div id="logo">
-                        <h1>CoWebXR</h1>
-                    </div>
+        <a-assets>
+            <img id="card"
+                src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.4/examples/image-tracking/assets/card-example/card.png" />
+            <a-asset-item id="avatarModel"
+                src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.4/examples/image-tracking/assets/card-example/softmind/scene.gltf">
+            </a-asset-item>
 
-                <!-- Nav -->
-                    <nav id="nav">
-                        <ul>
-                            <li class="current"><a href="index.html">Welcome</a></li>
-                            <li>
-                                <a href="#">Dropdown</a>
-                                <ul>
-                                    <li><a href="#">Lorem ipsum dolor</a></li>
-                                    <li><a href="#">Magna phasellus</a></li>
-                                    <li>
-                                        <a href="#">Phasellus consequat</a>
-                                        <ul>
-                                            <li><a href="#">Lorem ipsum dolor</a></li>
-                                            <li><a href="#">Phasellus consequat</a></li>
-                                            <li><a href="#">Magna phasellus</a></li>
-                                            <li><a href="#">Etiam dolore nisl</a></li>
-                                        </ul>
-                                    </li>
-                                    <li><a href="#">Veroeros feugiat</a></li>
-                                </ul>
-                            </li>
-                            <li><a href="left-sidebar.html">Left Sidebar</a></li>
-                            <li><a href="right-sidebar.html">Right Sidebar</a></li>
-                            <li><a href="no-sidebar.html">No Sidebar</a></li>
-                        </ul>
-                    </nav>
+            <img id="iconChevron" src="assets/icons/arrow_white.png" />
+            <img id="iconEdit" src="assets/icons/edit.png" />
+            <img id="iconSave" src="assets/icons/save.png" />
 
-            </header>
-        </div>
+            <template id="avatar-template" type="text/html">
+                <a-entity class="avatar" networked-audio-source>
+                    <a-plane id="avatarPlane" width="2" height="1.5" position="-1 8 -4" rotation="0 180 0"
+                        material="color: #ffffff; side: front; transparent: true" networked-video-source></a-plane>
+                </a-entity>
+            </template>
 
-        <div id="main-wrapper">
-            <div class="container">
-                <h2>Instructor</h2>
-                <div class="row gtr-200">
-                    <div class="col-4 col-12-medium">
-                        <!-- Sidebar -->
-                            <div id="sidebar">
-                                <section class="widget thumbnails">
-                                    <div><p>As the instructor, you have access to tools to control and edit the content that is available for the user to view.</p></div>
-                                    <h3>Controls</h3>
-                                    <div class="grid">
-                                        <div class="row gtr-50">
-                                            <div class="col-6">
-                                                <div class="actions">
-                                                    <button id="camera-btn" type="button" class="button">Show Camera to User</button>
-                                                    <!-- <button id="scene-btn" type="button" class="button">Start streaming scene</button> -->
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <p>Broadcast reliable test result: <span id="reliable-broadcast" class="fail">waiting</span></p>
-                                                <p>Broadcast unreliable  test result: <span id="unreliable-broadcast" class="fail">waiting</span></p>
-                                                <p>Send reliable test result: <span id="reliable-send" class="fail">waiting</span></p>
-                                                <p>Send unreliable test result: <span id="unreliable-send" class="fail">waiting</span></p>
-                                              </div>
-                                            <!-- <div class="col-6"><a href="#" class="image fit"><img src="images/pic04.jpg" alt="" /></a></div>
-                                            <div class="col-6"><a href="#" class="image fit"><img src="images/pic05.jpg" alt="" /></a></div>
-                                            <div class="col-6"><a href="#" class="image fit"><img src="images/pic06.jpg" alt="" /></a></div>
-                                            <div class="col-6"><a href="#" class="image fit"><img src="images/pic07.jpg" alt="" /></a></div> -->
-                                        </div>
-                                    </div>
-                                    <!-- <a href="#" class="button icon fa-file-alt">More</a> -->
-                                </section>
-                            </div>
+            <a-asset-item id="fabLabModel" src="assets/FabLabAll.glb"></a-asset-item>
 
-                    </div>
+            <img id="groundTexture" src="https://cdn.aframe.io/a-painter/images/floor.jpg">
 
-                    <div class="col-8 col-12-medium imp-medium">
-                        <div id="aframe_scene">
-                            <a-scene
-                            embedded
-                            mindar-image="imageTargetSrc: https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.4/examples/image-tracking/assets/card-example/card.mind; uiScanning: no"
-                            color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false"
-                            device-orientation-permission-ui="enabled: false" networked-scene="
-                            room: 1;
-                            debug: false;
-                            adapter: janus;
-                            connectOnLoad: true;
-                            serverURL: wss://192.168.1.101:8989/janus; ">
-                            <a-assets>
-                                <img id="card"
-                                    src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.4/examples/image-tracking/assets/card-example/card.png" />
-                                <a-asset-item id="avatarModel"
-                                    src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.4/examples/image-tracking/assets/card-example/softmind/scene.gltf">
-                                </a-asset-item>
+        </a-assets>
 
-                                <img id="chevron" src="/assets/arrow_white.png" />
+        <!-- Loading Fab Lab model and lights  -->
+        <a-entity gltf-model="#fabLabModel" position="0 0 0" scale="0.12 0.12 0.12"></a-entity>
+        <a-entity light="color: #ffffff; intensity: 1" position="2 1.8 0"></a-entity>
+        <!-- <a-entity light="color: #ffffff; intensity: 1.5" position="2 1.8 0"></a-entity> -->
 
-                                <template id="avatar-template" type="text/html">
-                                    <a-entity class="avatar" networked-audio-source>
-                                    <a-plane id="avatarPlane" width="10" height="20" position="0 5 0" 
-                                    rotation="0 0 0" material="side: front; transparent: true" networked-video-source></a-plane>                  
-                                    </a-entity>
-                                </template>
-                                
-                                <template id="marker-template" type="text/html">
-                                    <a-entity>
-                                        <a-plane id="data_item" material="side: double; color: #303971; transparent: true; opacity: 0.5" height="0.7" width="1" depth="0.01">
-                                            <a-text position="-0.47 0.25 0" scale="0.5 0.5 0.5" value="Computer"></a-text>
-                                            <a-text position="-0.46 0.13 0" wrap-count="26" scale="0.15 0.15 0.15" value="Use this computer to set the settings of the laser cutter."></a-text>
-                                        </a-plane>
-                                    </a-entity>
-                                </template>
+        <a-plane id="camera_back" material="side: double; color: #ffffff; transparent: true; opacity: 1.0" width="2"
+            height="1.5" position="-1 2 -4.99"></a-plane>
 
-                                <template id="content_template" type="text/html">
-                                    <a-entity position="0 0.3 0">
-                                        <a-plane id="data_item" material="side: double; color: #303971; transparent: true; opacity: 0.5" height="0.7" width="1" depth="0.01">
-                                            <a-text position="-0.47 0.25 0" scale="0.5 0.5 0.5" value="Computer"></a-text>
-                                            <a-text position="-0.46 0.13 0" wrap-count="26" scale="0.15 0.15 0.15" value="Use this computer to set the settings of the laser cutter."></a-text>
-                                        </a-plane>
-                            
-                                        <a-circle material="side: double; color: #303971; transparent: true; opacity: 0.5" position="-0.7 0 0" radius="0.1">
-                                            <a-image src="#chevron" material="alphaTest: 0.5" position="0 0 0.01" width="1" scale="0.1 0.1 0.1" rotation="0 180 0"></a-image>
-                                        </a-circle>
-                    
-                                        <a-circle material="side: double; color: #303971; transparent: true; opacity: 0.5" position="0.7 0 0" radius="0.1">
-                                            <a-image src="#chevron" material="alphaTest: 0.5" position="0 0 0.01" width="1" scale="0.1 0.1 0.1" rotation="0 0 0"></a-image>
-                                        </a-circle>
-                            
-                                        <a-plane material="side: double; color: #303971; transparent: true; opacity: 0" position="0 -0.5 0" height="0.2" width="1" depth="0.01">
-                                            <a-plane material="side: double; color: #303971; transparent: true; opacity: 0.5;" position="-0.39 0 0" height="0.2" width="0.2" depth="0.02"></a-plane>
-                                            <a-plane material="side: double; color: #303971; transparent: true; opacity: 0.5;" position="-0.13 0 0" height="0.2" width="0.2" depth="0.02"></a-plane>
-                                            <a-plane material="side: double; color: #303971; transparent: true; opacity: 0.5;" position="0.13 0 0" height="0.2" width="0.2" depth="0.02"></a-plane>
-                                            <a-plane material="side: double; color: #303971; transparent: true; opacity: 0.5;" position="0.39 0 0" height="0.2" width="0.2" depth="0.02"></a-plane>
-                                        </a-plane>
-                    
-                                    </a-entity>
-                                </template>
-                            </a-assets>
+        <a-camera look-controls="enabled: true" wasd-controls="enabled: true" position="0 1.6 0">
+            <a-entity cursor="fuse: false; fuseTimeout: 500; rayOrigin: mouse" position="0 0 -1">
+            </a-entity>
+            <a-entity id="player" networked="template:#avatar-template;attachTemplateToLocal:false" position="0 -5 -15"
+                rotation="0 0 0">
+            </a-entity>
+        </a-camera>
 
-                            <a-camera look-controls="enabled: true" wasd-controls="enabled: true" position="0 0 0" fit>
-                                <a-entity 
-                                    id="player" 
-                                    networked="template:#avatar-template;attachTemplateToLocal:false" 
-                                    position="0 -5 -15" rotation="0 0 0">
-                                </a-entity>
-                            </a-camera>
+        <a-entity position="0.8 1.7 -6" scale="1 1 1" rotation="0 200 0">
+            <!-- Marker Selector -->
+            <a-plane material="side: double; color: #303971; transparent: true; opacity: 0.5" position="-1.8 0.75 0"
+                height="0.2" width="1">
+                <a-text position="-0.47 0 0" scale="0.4 0.4 0.4" value="Markers"></a-text>
+            </a-plane>
 
-                            </a-scene>
-                        </div>
-                    </div>
+            <a-plane id="marker_selector" material="side: double; color: #303971; transparent: true; opacity: 0.5"
+                position="-1.8 0 0" height="1.2" width="1">
+                <a-plane id="select_marker1" material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5"
+                    position="0 0.48 0.01" height="0.24" width="1" onhover="disabled: true">
+                    <a-text id="select_marker1_text" position="-0.45 -0.05 0" scale="0.3 0.3 0.3" shader="msdf"
+                        font="https://raw.githubusercontent.com/etiennepinchon/aframe-fonts/master/fonts/roboto/Roboto-Italic.json"
+                        value="No marker available"></a-text>
+                </a-plane>
+                <a-plane id="select_marker2" material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5"
+                    position="0 0.24 0.01" height="0.24" width="1" onhover="disabled: true">
+                    <a-text id="select_marker2_text" position="-0.45 -0.05 0" scale="0.3 0.3 0.3" shader="msdf"
+                        font="https://raw.githubusercontent.com/etiennepinchon/aframe-fonts/master/fonts/roboto/Roboto-Italic.json"
+                        value="No marker available"></a-text>
+                </a-plane>
+                <a-plane id="select_marker3" material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5"
+                    position="0 0 0.01" height="0.24" width="1" onhover="disabled: true">
+                    <a-text id="select_marker3_text" position="-0.45 -0.05 0" scale="0.3 0.3 0.3" shader="msdf"
+                        font="https://raw.githubusercontent.com/etiennepinchon/aframe-fonts/master/fonts/roboto/Roboto-Italic.json"
+                        value="No marker available"></a-text>
+                </a-plane>
+                <a-plane id="select_marker4" material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5"
+                    position="0 -0.24 0.01" height="0.24" width="1" onhover="disabled: true">
+                    <a-text id="select_marker4_text" position="-0.45 -0.05 0" scale="0.3 0.3 0.3" shader="msdf"
+                        font="https://raw.githubusercontent.com/etiennepinchon/aframe-fonts/master/fonts/roboto/Roboto-Italic.json"
+                        value="No marker available"></a-text>
+                </a-plane>
+                <a-plane id="select_marker5" material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5"
+                    position="0 -0.48 0.01" height="0.24" width="1" onhover="disabled: true">
+                    <a-text id="select_marker5_text" position="-0.45 -0.05 0" scale="0.3 0.3 0.3" shader="msdf"
+                        font="https://raw.githubusercontent.com/etiennepinchon/aframe-fonts/master/fonts/roboto/Roboto-Italic.json"
+                        value="No marker available"></a-text>
+                </a-plane>
+            </a-plane>
+
+            <a-plane material="side: double; color: #303971; transparent: true; opacity: 0.5" position="-1.8 -0.7 0"
+                height="0.1" width="1">
+                <a-text id="viewing_markers" position="-0.47 0 0" scale="0.2 0.2 0.2"
+                    value="Viewing markers 1 to 5 out of #"></a-text>
+            </a-plane>
+
+            <a-plane id="selector_up" material="side: double; color: #303971; transparent: true; opacity: 0.5;"
+                position="-1.15 0.12 0" height="0.2" width="0.2" depth="0.02" onhover>
+                <a-image src="#iconChevron" material="alphaTest: 0.5" position="0 0 0.01" width="1" scale="0.1 0.1 0.1"
+                    rotation="0 0 90"></a-image>
+            </a-plane>
+            <a-plane id="selector_down" material="side: double; color: #303971; transparent: true; opacity: 0.5;"
+                position="-1.15 -0.12 0" height="0.2" width="0.2" depth="0.02" onhover>
+                <a-image src="#iconChevron" material="alphaTest: 0.5" position="0 0 0.01" width="1" scale="0.1 0.1 0.1"
+                    rotation="0 0 -90"></a-image>
+            </a-plane>
+
+            <!-- Jump to user looking marker -->
+            <a-plane id="marker_jump_to_current"
+                material="side: double; color: #303971; transparent: true; opacity: 0.5" position="0 -0.75 0"
+                height="0.2" onhover>
+                <a-text position="-0.47 0 0" scale="0.25 0.25 0.25aw" value="Jump to marker user is viewing"></a-text>
+            </a-plane>
+
+            <!-- Marker Viewer -->
+            <a-plane id="view_marker_plane" material="side: double; color: #303971; transparent: true; opacity: 0.5"
+                height="0.7" width="1" depth="0.01">
+                <a-text id="view_marker_title" position="-0.47 0.25 0" scale="0.5 0.5 0.5" value="Card title"></a-text>
+                <a-text id="view_marker_card_text" position="-0.46 0.13 0" wrap-count="26" scale="0.15 0.15 0.15"
+                    value="Card content"></a-text>
+                <a-text id="card_tracker" position="0.4 -0.3 0 " scale="0.15 0.15 0.15" value="-/-"></a-text>
+            </a-plane>
+
+            <!-- Which barcode -->
+            <a-plane id="view_marker_barcode" material="side: double; color: #303971; transparent: true; opacity: 0.5"
+                position="0 0.55 0" height="0.3" width="1" depth="0.01">
+                <a-text id="view_mb_title" position="-0.47 -0.05 0" wrap-count="10" scale="0.08 0.08 0.08" shader="msdf"
+                    font="https://raw.githubusercontent.com/etiennepinchon/aframe-fonts/master/fonts/roboto/Roboto-Italic.json"
+                    value="Associated marker"></a-text>
+                <a-image id="view_mb_image" src="assets/barcodes/empty_barcode.png" scale="0.25 0.25 0.25"
+                    position="0.32 0 0.01"></a-image>
+            </a-plane>
+
+            <a-circle id="view_marker_left_select"
+                material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5" position="-0.7 0 0"
+                radius="0.1" onhover="disabled: true">
+                <a-image src="#iconChevron" material="alphaTest: 0.5" position="0 0 0.01" width="1" scale="0.1 0.1 0.1"
+                    rotation="0 180 0"></a-image>
+            </a-circle>
+
+            <a-circle id="view_marker_right_select"
+                material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5" position="0.7 0 0" radius="0.1"
+                onhover="disabled: true">
+                <a-image src="#iconChevron" material="alphaTest: 0.5" posiation="0 0 0.01" width="1" scale="0.1 0.1 0.1"
+                    rotation="0 0 0"></a-image>
+            </a-circle>
+
+            <!-- Edit buttons -->
+            <a-plane id="editEditBtn" material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5;" position="-0.39 -0.5 0"
+                height="0.2" width="0.2" depth="0.02" onhover="disabled: true">
+                <a-image src="#iconEdit" material="alphaTest: 0.5" position="0.001 0.001 0.01" scale="0.1 0.1 0.1">
+                </a-image>
+            </a-plane>
+            <a-plane id="editSaveBtn" material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5;" position="-0.13 -0.5 0"
+                height="0.2" width="0.2" depth="0.02" onhover="disabled: true">
+                <a-image src="#iconSave" material="alphaTest: 0.5" position="0 0.001 0.01" scale="0.1 0.1 0.1">
+                </a-image>
+            </a-plane>
+            <a-plane material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5;" position="0.13 -0.5 0"
+                height="0.2" width="0.2" depth="0.02" onhover="disabled: true"></a-plane>
+            <a-plane material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5;" position="0.39 -0.5 0"
+                height="0.2" width="0.2" depth="0.02" onhover="disabled: true"></a-plane>
+
+        </a-entity>
+
+        <a-entity environment="preset: default; groundColor: #445; grid: cross"></a-entity>
+        <a-plane src="#groundTexture" rotation="-90 0 0" position="0 -0.1 0" width="100" height="100"></a-plane>
+    </a-scene>
 
 
-    
-                </div>
+    <div class="actions">
+        <button id="camera-btn" type="button" class="button">Show Camera to User</button>
+        <!-- <button id="scene-btn" type="button" class="button">Start streaming scene</button> -->
+    </div>
+    <div>
+        <p>Broadcast reliable test result: <span id="reliable-broadcast" class="fail">waiting</span></p>
+        <p>Broadcast unreliable test result: <span id="unreliable-broadcast" class="fail">waiting</span></p>
+        <p>Send reliable test result: <span id="reliable-send" class="fail">waiting</span></p>
+        <p>Send unreliable test result: <span id="unreliable-send" class="fail">waiting</span></p>
+    </div>
 
-            </div>
-        </div>
 
     <style>
         .actions {
@@ -321,7 +563,7 @@
                                 mediaSource: "camera",
                                 // height: { max: 1280 },
                                 // width: { max: 720 },
-                                frameRate: { max: 60, ideal: 30},
+                                frameRate: { max: 60, ideal: 30 },
                                 facingMode: { ideal: "environment" }
                             }
                         });
@@ -354,6 +596,169 @@
     </script>
 
     <script>
+        function displayData(db) {
+            // Open our object store and then get a cursor - which iterates through all the
+            // different data items in the store
+            const objectStore = db.transaction('markers_os').objectStore('markers_os');
+            var cursor_count = 1;
+            objectStore.openCursor().addEventListener('success', e => {
+                // Get a reference to the cursor
+                const cursor = e.target.result;
+                console.log(cursor);
+
+                // If there is still another data item to iterate through, keep running this code
+                if (cursor) {
+                    if (cursor_count < 6) {
+                        // Setting title text of the marker to text field
+                        const marker_title = cursor.value.marker_title;
+                        const mt_capitalised = marker_title.charAt(0).toUpperCase() + marker_title.slice(1);
+
+                        const marker_el_text = document.getElementById(`select_marker${cursor_count}_text`);
+                        marker_el_text.setAttribute("value", `#${cursor_count}: ${mt_capitalised}`);
+                        marker_el_text.setAttribute("marker_id", `${cursor.value.marker_id}`);
+
+                        // Set marker ID value for AR.js to the parent a-plane entity of the marker title
+                        const marker_el = document.getElementById(`select_marker${cursor_count}`);
+                        marker_el.setAttribute("marker_val", `${cursor.value.marker_value}`);
+                        marker_el.setAttribute("color", "#303971")
+                        marker_el.setAttribute("onhover", "disabled: false");
+                    }
+                    cursor_count++;
+                    // Iterate to the next item in the cursor
+                    cursor.continue();
+                }
+                const view_markers = document.getElementById(`viewing_markers`);
+                view_markers.setAttribute("value", `Viewing markers 1 to ${cursor_count - 1} out of ${cursor_count - 1}`);
+            });
+        }
+
+        function addData(db, data) {
+            // prevent default - we don't want the form to submit in the conventional way
+            // open a read/write db transaction, ready for adding the data
+            const transaction = db.transaction(['markers_os'], 'readwrite');
+
+            for (var i = 0; i < data.length; i++) {
+                const curr_data = data[i];
+                // grab the values entered into the form fields and store them in an object ready for being inserted into the DB
+                const newItem = { marker_id: curr_data.marker_id, marker_title: curr_data.marker_title, marker_value: curr_data.marker_value, cards: curr_data.cards };
+
+                // call an object store that's already been added to the database
+                const objectStore = transaction.objectStore('markers_os');
+
+                // Make a request to add our newItem object to the object store
+                const addRequest = objectStore.add(newItem);
+
+                addRequest.addEventListener('success', () => {
+
+                });
+            }
+
+            // Report on the success of the transaction completing, when everything is done
+            transaction.addEventListener('complete', () => {
+                console.log('Transaction completed: database modification finished.');
+
+                // update the display of data to show the newly added item, by running displayData() again.
+                displayData(db);
+            });
+
+            transaction.addEventListener('error', () => console.log('Transaction not opened due to error'));
+
+        }
+
+        function retrieve_data(route) {
+            const XHR = new XMLHttpRequest();
+
+            var req = indexedDB.deleteDatabase("markers_db");
+            req.onsuccess = function () {
+                console.log("Deleted database successfully");
+            };
+            req.onerror = function () {
+                console.log("Couldn't delete database");
+            };
+            req.onblocked = function () {
+                console.log("Couldn't delete database due to the operation being blocked");
+            };
+
+            XHR.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    const returned_data = JSON.parse(this.responseText);
+                    const num_items = returned_data.length;
+
+                    let db;
+                    const openRequest = window.indexedDB.open('markers_db', 1);
+                    openRequest.addEventListener('error', () => console.error('Database failed to open'));
+                    openRequest.addEventListener('success', () => {
+                        // console.log('Database opened successfully');
+
+                        // Store the opened database object in the db variable. This is used a lot below
+                        db = openRequest.result;
+
+                        // adding the data returned from the server to IDB and render first five markers
+                        addData(db, returned_data);
+
+
+                    });
+
+                    openRequest.addEventListener('upgradeneeded', e => {
+                        // Grab a reference to the opened database
+                        db = e.target.result;
+
+                        // Create an objectStore to store our notes in (basically like a single table)
+                        // including a auto-incrementing key
+                        const objectStore = db.createObjectStore('markers_os', { keyPath: 'id', autoIncrement: true });
+
+                        // Define what data items the objectStore will contain
+                        objectStore.createIndex('cards', 'cards', { unique: false });
+                        objectStore.createIndex('marker_id', 'marker_id', { unique: false });
+                        objectStore.createIndex('marker_title', 'marker_title', { unique: false });
+                        objectStore.createIndex('marker_value', 'marker_value', { unique: false });
+
+                        // console.log('Database setup complete');
+                    });
+
+                    // console.log(returned_data);
+
+                    // store marker data in local IndexedDB
+                    // var idb = importIDB("markers_db", "markers_os", returned_data); 
+                    // displayData(idb);
+
+                    // if (route == "markers") {
+                    //     // create markers programatically from data returned from server
+                    //     const camera = document.querySelector('a-camera');
+                    //     const sceneEl = document.querySelector('a-scene');
+
+                    //     for (var i=0; i<num_items; i++) {
+                    //         let curr_marker = returned_data[i];
+                    //         console.log(curr_marker);
+                    //         let cm_value = curr_marker.marker_value;
+                    //         let cm_id = curr_marker.marker_id;
+                    //         let cm_title = curr_marker.marker_title;
+                    //         // console.log(cm_value, cm_id);
+
+                    //         // // create marker to be recognised
+                    //         // const newMarker = document.createElement("a-marker");
+                    //         // newMarker.setAttribute("type", "barcode");
+                    //         // newMarker.setAttribute("value", cm_value);
+                    //         // newMarker.setAttribute("id", cm_id);
+                    //         // newMarker.setAttribute("registerevents", "");
+                    //         // sceneEl.appendChild(newMarker);
+                    //     }
+
+                    // }
+
+                }
+            };
+            XHR.open("GET", `https://192.168.1.101:8444/${route}/`);
+            XHR.send();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // request from the database, the shortlist of IDs
+            retrieve_data("markers");
+        });
+    </script>
+
+    <script>
         // Define custom schema for syncing avatar color, set by random-color
         NAF.schemas.add({
             template: '#avatar-template',
@@ -372,10 +777,10 @@
             console.log("onConnect", new Date());
         }
     </script>
-    
+
     <script>
         AFRAME.registerComponent("fit", {
-            init: function() {
+            init: function () {
                 const plane = document.querySelector("#avatarPlane");
                 const distance = this.el.object3D.position.distanceTo(plane.object3D.position);
                 const height = plane.getAttribute("geometry").height;
@@ -383,7 +788,6 @@
                 const newDistance = Math.abs((height / 2) / Math.tan(fov / 2));
                 this.el.sceneEl.camera.zoom = distance / newDistance;
             }
-        })
+        });
     </script>
 </body>
-
