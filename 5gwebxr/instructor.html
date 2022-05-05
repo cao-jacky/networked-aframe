@@ -102,6 +102,7 @@
                         let vm_left_marker = document.getElementById("view_marker_left_select");
                         vm_left_marker.setAttribute("onhover", "disabled: true");
                         vm_left_marker.setAttribute("color", "#d8d8d8");
+                        vm_left_marker.setAttribute("opacity", "0.5");
                         vm_left_marker.setAttribute("select_card_id", "-1");
 
                         let vm_right_marker = document.getElementById("view_marker_right_select");
@@ -109,13 +110,16 @@
                         let cards_len = marker_card_content.length;
                         let right_onhover = "disabled: true";
                         let right_color = "#d8d8d8";
+                        let right_opacity = "0.5";
                         if (cards_len > 1) {
                             right_onhover = "disabled: false";
                             right_color = "#303971";
+                            right_opacity = "0.7"
                             vm_right_marker.setAttribute("select_card_id", "1");
                         }
                         vm_right_marker.setAttribute("onhover", right_onhover);
                         vm_right_marker.setAttribute("color", right_color);
+                        vm_right_marker.setAttribute("opacity", right_opacity);
 
                         // set the status of current card out of x
                         $("#card_tracker").attr("value", `${1}/${cards_len}`);
@@ -162,43 +166,134 @@
 
                 let left_onhover = "disabled: false";
                 let left_color = "#303971";
+                let left_opacity = "0.7";
 
                 // check if going back one card would be the first card
                 if (parseInt(card_arrow_selected) - 1 < 0) {
                     left_onhover = "disabled: true";
                     left_color = "#d8d8d8";
+                    left_opacity = "0.5";
                 }
 
                 vm_left_marker.setAttribute("onhover", left_onhover);
                 vm_left_marker.setAttribute("color", left_color);
+                vm_left_marker.setAttribute("opacity", left_opacity);
                 vm_left_marker.setAttribute("select_card_id", parseInt(card_arrow_selected) - 1);
 
                 let vm_right_marker = document.getElementById("view_marker_right_select");
                 let right_onhover = "disabled: true";
                 let right_color = "#d8d8d8";
+                let right_opacity = "0.5";
 
                 // check number of cards, if more than the current new ID, show next arrow button
                 let cards_len = card_data.length;
                 if (cards_len - 1 > card_arrow_selected) {
                     right_onhover = "disabled: false";
                     right_color = "#303971";
+                    right_opacity = "0.7";
                     vm_right_marker.setAttribute("select_card_id", parseInt(card_arrow_selected) + 1);
                 }
                 vm_right_marker.setAttribute("onhover", right_onhover);
                 vm_right_marker.setAttribute("color", right_color);
+                vm_right_marker.setAttribute("opacity", right_opacity);
 
                 // changing the current card number out of total on card_tracker
                 $("#card_tracker").attr("value", `${parseInt(card_arrow_selected) + 1}/${cards_len}`);
             }
-        
-            // 
+
+            // behaviour if edit button is selected
+            if (el_clicked_id == "editEditBtn") {
+                // copy current card contents into a variable
+                let curr_card_title = $("#view_marker_title").attr('value');
+                let curr_card_text = $("#view_marker_card_text").attr('value');
+
+                // change edit planes text to the above
+                $("#edit_marker_title").attr('value', curr_card_title);
+                $("#edit_marker_card_text").attr('value', curr_card_text);
+
+                // show edit planes 
+                $("#edit_marker_title_plane").attr('visible', "true");
+                $("#edit_marker_card_text_plane").attr('visible', "true");
+
+                // disable left/right arrow selectors, or notify that you cannot move
+
+                // change save button to be available 
+                let save_button = document.getElementById("editSaveBtn");
+                save_button.setAttribute("onhover", "disabled: false");
+                save_button.setAttribute("color", "#303971");
+            }
+
+            // if one of the edit_marker_* planes are selected 
+            let if_edit_card = el_clicked_id.includes("edit_marker");
+            if (if_edit_card) {
+                // get text of the plane 
+                let edit_text_field_name = el_clicked_id.slice(0, -6);
+                let edit_text = $(`#${edit_text_field_name}`).attr("value");
+
+                // console.log(el_clicked_id.attr("text"));
+
+                // add a plane behind the current plane
+                // get position, height, width of box
+                let curr_ep_position = $(`#${el_clicked_id}`).attr("position");
+                let curr_ep_height = $(`#${el_clicked_id}`).attr("height");
+                let curr_ep_width = $(`#${el_clicked_id}`).attr("width");
+
+                // create the plane, set attributes, append to current edit plane
+                const colour_plane = document.createElement("a-plane");
+                colour_plane.setAttribute("position", "0 0 -0.01");
+                colour_plane.setAttribute("height", `${parseFloat(curr_ep_height) + 0.02}`);
+                colour_plane.setAttribute("width", `${parseFloat(curr_ep_width) + 0.02}`);
+                colour_plane.setAttribute("color", "#1098f7");
+                colour_plane.setAttribute("opacity", "0.7");
+
+                const old_plane = document.getElementById(el_clicked_id);
+                old_plane.appendChild(colour_plane);
+
+                // disable onhover of itself 
+                $(`#${el_clicked_id}`).attr('onhover', "disabled: true");
+                $(`#${el_clicked_id}`).attr('color', "#ffffff");
+                $(`#${el_clicked_id}`).attr('opacity', "1.0");
+
+                // add a pipe to the end of the text string, if already one, don't add
+                if (edit_text.slice(-1) != "|") {
+                    // remove all previous instances of the pipe if they occur already
+                    edit_text = edit_text.replaceAll('|', '');
+                    let edit_text_new = edit_text + "|";
+                    $(`#${edit_text_field_name}`).attr("value", edit_text_new);
+                }
+
+                // set an attribute to show which field is being edited
+                $(`#${edit_text_field_name}`).attr("editing", "true");
+
+                // disable WASD controls for now
+                document.querySelector('[camera]').removeAttribute('wasd-controls');
+            }
+
+            // behaviour if save button is selected
+            if (el_clicked_id == "editSaveBtn") {
+                // store title and card content into variables
+
+                // send the content to be updated in the MongoDB DB
+
+                // edit the original card to reflect these changes
+
+                // hide the edit cards
+
+            }
+
+            // behaviour if save as new button is selected - move this into above function to save repeating
+            if (el_clicked_id == "editSaveNewBtn") {
+                // perform same steps as saving
+
+                // change associated marker
+            }
         }
 
         AFRAME.registerComponent('onhover', {
             schema: {
                 disabled: { default: false },
                 color: { type: 'color', default: '#303971' },
-                opacity: { default: '0.5' }
+                opacity: { default: '0.7' }
             },
 
             init: function () {
@@ -268,8 +363,94 @@
             }
         });
 
-        document.addEventListener("keypress", function (event) {
-            console.log(event.keyCode);
+        document.addEventListener("keydown", function (event) {
+            //  find the field that is being edited
+            var editing_elements = Array.from(document.querySelectorAll("[id^='edit_']"));
+
+            // re-adding WASD controls if shift is pressed alongside WASD keys
+            const wasd = ["w", "a", "s", "d"];
+            if (wasd.includes((event.key).toLowerCase())) {
+                if (event.shiftKey) {
+                    console.log(event.key + " and shift");
+                    document.querySelector('[camera]').setAttribute('wasd-controls', "enabled:true");
+                }
+            }
+
+            for (var i = 0; i < editing_elements.length; i++) {
+                var curr_el = editing_elements[i];
+                var is_editable = document.getElementById(curr_el.id).hasAttribute("editing");
+
+                if (is_editable) {
+                    // TO IMPLEMENT:
+                    // - BEHAVIOUR TO STOP BOX OVERFLOW! 
+                    // - COPY AND PASTING
+
+                    // if WASD-controls are on, don't allow for text editing 
+                    let camera_wasd = document.querySelector('[camera]').hasAttribute('wasd-controls');
+                    let total_characters = 9 * 35;
+                    if (!camera_wasd) {
+                        // get text from the text box
+                        let edit_text_field_name = curr_el.id;
+                        let edit_text = $(`#${edit_text_field_name}`).attr("value");
+
+                        // if keys are non-alphanumeric, don't print them - if the key string length is greater than 1, ignore
+                        if (!(event.key.length > 1)) {
+                            let curr_num_chars = parseInt(edit_text.length);
+
+                            // estimate the number of lines currently on
+                            let card_est_num_lines = Math.floor(curr_num_chars / 36);
+                            console.log(curr_num_chars + " " + card_est_num_lines);
+
+                            // find number of characters, and if too many, stop entering more
+                            if (curr_num_chars < total_characters) {
+                                // convert the keystrokes into actual letters, and move cursor along
+                                edit_text = edit_text.replaceAll('|', '');
+                                edit_text = edit_text + event.key + '|';
+                                $(`#${edit_text_field_name}`).attr("value", edit_text);
+                            }
+                        }
+
+                        // backspace behaviour
+                        if (event.key == "Backspace") {
+                            edit_text = edit_text.slice(0, -2) + "|";
+                            $(`#${edit_text_field_name}`).attr("value", edit_text);
+                        }
+
+                        // enter behaviour
+                        if (event.key == "Enter") {
+                            // check if the card content or card title
+                            if (!edit_text_field_name.includes("title")) {
+                                // if total number of characters not met, allow enter
+                                if (parseInt(edit_text.length) < total_characters) {
+                                    // if 9th line, prevent further new lines
+                                    let card_num_lines = (edit_text.match(/\n/g) || []).length;
+
+                                    if (card_num_lines < 8) {
+                                        edit_text = edit_text.replaceAll('|', '');
+                                        edit_text = edit_text + "\n|";
+                                        $(`#${edit_text_field_name}`).attr("value", edit_text);
+                                    }
+                                }
+
+
+
+
+                            }
+                        }
+                    }
+                }
+
+            }
+
+            console.log(event.key);
+
+
+
+            // render letters on the new plane
+
+
+            // add ability to move that cursor and scan through the text            
+
         });
     </script>
 </head>
@@ -312,7 +493,7 @@
         <!-- Loading Fab Lab model and lights  -->
         <a-entity gltf-model="#fabLabModel" position="0 0 0" scale="0.12 0.12 0.12"></a-entity>
         <a-entity light="color: #ffffff; intensity: 1" position="2 1.8 0"></a-entity>
-        <!-- <a-entity light="color: #ffffff; intensity: 1.5" position="2 1.8 0"></a-entity> -->
+        <a-entity light="color: #ffffff; intensity: 0.9" position="0.9 2.0 -6"></a-entity>
 
         <a-plane id="camera_back" material="side: double; color: #ffffff; transparent: true; opacity: 1.0" width="2"
             height="1.5" position="-1 2 -4.99"></a-plane>
@@ -327,13 +508,14 @@
 
         <a-entity position="0.8 1.7 -6" scale="1 1 1" rotation="0 200 0">
             <!-- Marker Selector -->
-            <a-plane material="side: double; color: #303971; transparent: true; opacity: 0.5" position="-1.8 0.75 0"
+            <a-plane material="side: double; color: #303971; transparent: true; opacity: 0.7" position="-1.8 0.75 0"
                 height="0.2" width="1">
                 <a-text position="-0.47 0 0" scale="0.4 0.4 0.4" value="Markers"></a-text>
             </a-plane>
 
-            <a-plane id="marker_selector" material="side: double; color: #303971; transparent: true; opacity: 0.5"
+            <a-plane id="marker_selector" material="side: double; color: #303971; transparent: true; opacity: 0.7"
                 position="-1.8 0 0" height="1.2" width="1">
+                <!-- CHANGE THESE MARKERS TO BE GENERATE PROGRAMATICALLY!!!! -->
                 <a-plane id="select_marker1" material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5"
                     position="0 0.48 0.01" height="0.24" width="1" onhover="disabled: true">
                     <a-text id="select_marker1_text" position="-0.45 -0.05 0" scale="0.3 0.3 0.3" shader="msdf"
@@ -366,18 +548,18 @@
                 </a-plane>
             </a-plane>
 
-            <a-plane material="side: double; color: #303971; transparent: true; opacity: 0.5" position="-1.8 -0.7 0"
+            <a-plane material="side: double; color: #303971; transparent: true; opacity: 0.7" position="-1.8 -0.7 0"
                 height="0.1" width="1">
                 <a-text id="viewing_markers" position="-0.47 0 0" scale="0.2 0.2 0.2"
                     value="Viewing markers 1 to 5 out of #"></a-text>
             </a-plane>
 
-            <a-plane id="selector_up" material="side: double; color: #303971; transparent: true; opacity: 0.5;"
+            <a-plane id="selector_up" material="side: double; color: #303971; transparent: true; opacity: 0.7;"
                 position="-1.15 0.12 0" height="0.2" width="0.2" depth="0.02" onhover>
                 <a-image src="#iconChevron" material="alphaTest: 0.5" position="0 0 0.01" width="1" scale="0.1 0.1 0.1"
                     rotation="0 0 90"></a-image>
             </a-plane>
-            <a-plane id="selector_down" material="side: double; color: #303971; transparent: true; opacity: 0.5;"
+            <a-plane id="selector_down" material="side: double; color: #303971; transparent: true; opacity: 0.7;"
                 position="-1.15 -0.12 0" height="0.2" width="0.2" depth="0.02" onhover>
                 <a-image src="#iconChevron" material="alphaTest: 0.5" position="0 0 0.01" width="1" scale="0.1 0.1 0.1"
                     rotation="0 0 -90"></a-image>
@@ -385,22 +567,36 @@
 
             <!-- Jump to user looking marker -->
             <a-plane id="marker_jump_to_current"
-                material="side: double; color: #303971; transparent: true; opacity: 0.5" position="0 -0.75 0"
+                material="side: double; color: #303971; transparent: true; opacity: 0.7" position="0 -0.75 0"
                 height="0.2" onhover>
-                <a-text position="-0.47 0 0" scale="0.25 0.25 0.25aw" value="Jump to marker user is viewing"></a-text>
+                <a-text position="-0.47 0 0" scale="0.25 0.25 0.25" value="Jump to marker user is viewing"></a-text>
             </a-plane>
 
             <!-- Marker Viewer -->
-            <a-plane id="view_marker_plane" material="side: double; color: #303971; transparent: true; opacity: 0.5"
+            <a-plane id="view_marker_plane" material="side: double; color: #303971; transparent: true; opacity: 0.7"
                 height="0.7" width="1" depth="0.01">
                 <a-text id="view_marker_title" position="-0.47 0.25 0" scale="0.5 0.5 0.5" value="Card title"></a-text>
                 <a-text id="view_marker_card_text" position="-0.46 0.13 0" wrap-count="26" scale="0.15 0.15 0.15"
                     value="Card content"></a-text>
-                <a-text id="card_tracker" position="0.4 -0.3 0 " scale="0.15 0.15 0.15" value="-/-"></a-text>
+                <a-entity textarea></a-entity>
+
+                <a-text id="card_tracker" position="0.4 -0.3 0" scale="0.15 0.15 0.15" value="-/-"></a-text>
+
+                <!-- Edit planes -->
+                <a-plane id="edit_marker_title_plane" color="#ffffff" position="0 0.25 0.02" height="0.13" width="0.95"
+                    onhover visible="false">
+                    <a-text id="edit_marker_title" color="#000000" position="-0.47 0 0" scale="0.45 0.45 0.45"
+                        value="Card title"></a-text>
+                </a-plane>
+                <a-plane id="edit_marker_card_text_plane" color="#ffffff" position="0 -0.08 0.02" height="0.48"
+                    width="0.95" onhover visible="false">
+                    <a-text id="edit_marker_card_text" anchor="left" baseline="top" color="#000000"
+                        position="-0.44 0.20 0" scale="0.17 0.17 0.17" wrap-count="35" value="Card content"></a-text>
+                </a-plane>
             </a-plane>
 
             <!-- Which barcode -->
-            <a-plane id="view_marker_barcode" material="side: double; color: #303971; transparent: true; opacity: 0.5"
+            <a-plane id="view_marker_barcode" material="side: double; color: #303971; transparent: true; opacity: 0.7"
                 position="0 0.55 0" height="0.3" width="1" depth="0.01">
                 <a-text id="view_mb_title" position="-0.47 -0.05 0" wrap-count="10" scale="0.08 0.08 0.08" shader="msdf"
                     font="https://raw.githubusercontent.com/etiennepinchon/aframe-fonts/master/fonts/roboto/Roboto-Italic.json"
@@ -409,6 +605,7 @@
                     position="0.32 0 0.01"></a-image>
             </a-plane>
 
+            <!-- Arrow selection left/right -->
             <a-circle id="view_marker_left_select"
                 material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5" position="-0.7 0 0"
                 radius="0.1" onhover="disabled: true">
@@ -419,18 +616,18 @@
             <a-circle id="view_marker_right_select"
                 material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5" position="0.7 0 0" radius="0.1"
                 onhover="disabled: true">
-                <a-image src="#iconChevron" material="alphaTest: 0.5" posiation="0 0 0.01" width="1" scale="0.1 0.1 0.1"
+                <a-image src="#iconChevron" material="alphaTest: 0.5" position="0 0 0.01" width="1" scale="0.1 0.1 0.1"
                     rotation="0 0 0"></a-image>
             </a-circle>
 
             <!-- Edit buttons -->
-            <a-plane id="editEditBtn" material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5;" position="-0.39 -0.5 0"
-                height="0.2" width="0.2" depth="0.02" onhover="disabled: true">
+            <a-plane id="editEditBtn" material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5;"
+                position="-0.39 -0.5 0" height="0.2" width="0.2" depth="0.02" onhover="disabled: true">
                 <a-image src="#iconEdit" material="alphaTest: 0.5" position="0.001 0.001 0.01" scale="0.1 0.1 0.1">
                 </a-image>
             </a-plane>
-            <a-plane id="editSaveBtn" material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5;" position="-0.13 -0.5 0"
-                height="0.2" width="0.2" depth="0.02" onhover="disabled: true">
+            <a-plane id="editSaveBtn" material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5;"
+                position="-0.13 -0.5 0" height="0.2" width="0.2" depth="0.02" onhover="disabled: true">
                 <a-image src="#iconSave" material="alphaTest: 0.5" position="0 0.001 0.01" scale="0.1 0.1 0.1">
                 </a-image>
             </a-plane>
