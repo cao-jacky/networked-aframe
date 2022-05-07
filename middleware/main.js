@@ -14,11 +14,11 @@ const uri = "mongodb://localhost:27017/";
 
 const client = new mongodb.MongoClient(uri);
 
-function objectify_form(formArray) {
+function objectify_data(data) {
 	//serialize data function
 	var returnArray = {};
-	for (var i = 0; i < formArray.length; i++) {
-		returnArray[formArray[i]['name']] = formArray[i]['value'];
+	for (var i = 0; i < data.length; i++) {
+		returnArray[data[i]['name']] = data[i]['value'];
 	}
 	return returnArray;
 }
@@ -57,7 +57,7 @@ async function marker_insert() {
 				{
 					card_id: "0",
 					card_content: "test"
-				}, 
+				},
 				{
 					card_id: "1",
 					card_content: "ajlsdnlaskd"
@@ -131,6 +131,41 @@ async function marker_retrieve(types_to_retrieve) {
 	}
 }
 
+async function marker_update(data) {
+	try {
+		await client.connect();
+		const database = client.db("5gwebxr");
+		const marker_details = database.collection("markers");
+
+		// create a filter for the marker to update - selecting which by using new marker value
+		const filter = { marker_value: data.marker_value };
+
+		const update_document = {
+			$set: {
+				marker_value: data.new_marker_value,
+				marker_title: data.marker_title,
+				cards: data.cards
+			}
+		}
+
+		const result = await marker_details.updateOne(filter, update_document);
+		console.log(
+			`${result.matchedCount} document(s) matched the filter, updated ${result.modifiedCount} document(s)`,
+		);
+
+
+		// const user_doc = {
+		// 	first_name: user_json["fname"],
+		// 	surname: user_json["lname"],
+		// 	id: Math.random().toString(36).slice(2),
+		// }
+		// const result = await user_details.insertOne(user_doc);
+		// console.log(`A document was inserted with the _id: ${result.insertedId}`);
+	} finally {
+		await client.close();
+	}
+}
+
 const app = express();
 app.use(cors({ origin: '*' }));
 
@@ -171,6 +206,20 @@ app.get('/markers', (req, res) => {
 		res.send(result);
 		console.log("Sent markers to client");
 	})
+});
+
+app.post('/marker_update', express.json(), (req, res) => {
+	console.log(req.body);
+	marker_update(req.body);
+	console.log("Updating marker details");
+	// marker_insert();
+	// let marker_lists = marker_retrieve("all");
+	// marker_lists.then(function (result) {
+	// 	res.status(200)
+	// 	res.send(result);
+	// 	console.log("Sent markers to client");
+	// })
+	res.sendStatus(200);
 });
 
 var httpsServer = https.createServer(credentials, app);

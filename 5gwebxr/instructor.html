@@ -67,6 +67,7 @@
             if (if_selecting_marker) {
                 let selected_marker = el_clicked_id;
                 let selected_marker_id = document.getElementById(`${selected_marker}_text`).getAttribute("marker_id");
+                let selected_marker_value = document.getElementById(`${selected_marker}`).getAttribute("marker_val");
 
                 // get entire marker data from IndexedDB
                 var db_open_request = window.indexedDB.open('markers_db', 1);
@@ -81,6 +82,25 @@
                     var object_store_req = cur_val_index.get(selected_marker_id);
 
                     object_store_req.onsuccess = function (event) {
+                        // go through other markers in the list and re-enable their on-hover
+                        const markers = document.querySelectorAll(`a-plane[id^="select_marker"]`);
+
+                        for (var i = 0; i < markers.length; i++) {
+                            var curr_el = markers[i];
+                            // Don't reset colour if no marker is there 
+                            if (curr_el.hasAttribute("marker_val")) {
+                                console.log(curr_el + " " + curr_el.hasAttribute("marker_val"));
+                                $(`#${curr_el.id}`).attr("onhover", "disabled: false");
+                                $(`#${curr_el.id}`).attr("color", "#303971");
+                                $(`#${curr_el.id}`).attr("opacity", "0.5");
+                            }
+                        }
+
+                        // disable onhover to leave the current marker as selected
+                        $(`#${selected_marker}`).attr("onhover", "disabled: true");
+                        $(`#${selected_marker}`).attr("color", "#FF8C00");
+                        $(`#${selected_marker}`).attr("opacity", "0.5");
+
                         // set the marker card viewer contents once pulled from DB
                         var marker_contents = object_store_req.result;
 
@@ -91,12 +111,18 @@
                         // set card contents
                         let marker_card_content = marker_contents.cards;
 
+                        // set current card ID on the plane
+                        $("#view_marker_plane").attr("marker_curr_card_id", "1");
+
                         // store card contents as an attribute of the background plane
                         var card_data_str = encodeURIComponent(JSON.stringify(marker_card_content));
                         $("#view_marker_plane").attr("marker_card_data", card_data_str);
 
                         let first_card = marker_card_content[0];
                         $("#view_marker_card_text").attr("value", first_card.card_content);
+
+                        // store marker_value also as an attribute of the plane
+                        $("#view_marker_plane").attr("marker_value", selected_marker_value);
 
                         // set selectors to either be off or indicate what card number next/before
                         let vm_left_marker = document.getElementById("view_marker_left_select");
@@ -132,6 +158,22 @@
                         edit_button.setAttribute("onhover", "disabled: false");
                         edit_button.setAttribute("color", "#303971");
 
+                        // turn on the edit add/subtract card buttons 
+                        let add_card_button = document.getElementById("editCardAdd");
+                        add_card_button.setAttribute("onhover", "disabled: false");
+                        add_card_button.setAttribute("color", "#303971");
+
+                        let subtract_card_button = document.getElementById("editCardSubtract");
+                        // if just one card, turn off delete card
+                        let subtract_hover = "disabled: false";
+                        let subtract_color = "#303971";
+                        if (cards_len == 1) {
+                            subtract_hover = "disabled: true";
+                            subtract_color = "#d8d8d8";
+                        }
+                        subtract_card_button.setAttribute("onhover", subtract_hover);
+                        subtract_card_button.setAttribute("color", subtract_color);
+
                         // let save_button = document.getElementById("editSaveBtn");
                         // save_button.setAttribute("onhover", "disabled: false");
                         // save_button.setAttribute("color", "#303971");
@@ -148,7 +190,9 @@
                 let card_arrow_selected = document.getElementById(el_clicked_id).getAttribute("select_card_id");
 
                 // check if the arrow is disabled, i.e., onhover? 
-                if (parseInt(card_arrow_selected) < 0) {
+                let is_on_hover_disabled = $(`#${el_clicked_id}`).attr('onhover').disabled;
+
+                if (parseInt(card_arrow_selected) < 0 || is_on_hover_disabled) {
                     // if first card or last card, don't do anything
                     break card_selector;
                 }
@@ -187,22 +231,45 @@
 
                 // check number of cards, if more than the current new ID, show next arrow button
                 let cards_len = card_data.length;
+                let new_card_id = parseInt(card_arrow_selected) + 1;
                 if (cards_len - 1 > card_arrow_selected) {
                     right_onhover = "disabled: false";
                     right_color = "#303971";
                     right_opacity = "0.7";
-                    vm_right_marker.setAttribute("select_card_id", parseInt(card_arrow_selected) + 1);
+                    vm_right_marker.setAttribute("select_card_id", new_card_id);
                 }
                 vm_right_marker.setAttribute("onhover", right_onhover);
                 vm_right_marker.setAttribute("color", right_color);
                 vm_right_marker.setAttribute("opacity", right_opacity);
 
                 // changing the current card number out of total on card_tracker
-                $("#card_tracker").attr("value", `${parseInt(card_arrow_selected) + 1}/${cards_len}`);
+                $("#card_tracker").attr("value", `${new_card_id}/${cards_len}`);
+
+                // store card ID on the plane 
+                $("#view_marker_plane").attr("marker_curr_card_id", new_card_id);
             }
 
             // behaviour if edit button is selected
-            if (el_clicked_id == "editEditBtn") {
+            edit_card: if (el_clicked_id == "editEditBtn") {
+                // check if the edit planes are already visible
+                let is_edit_card_plane = $("#edit_marker_card_text_plane").attr('visible');
+                if (is_edit_card_plane) {
+                    // if they are visible, hide them when edit button is pressed
+                    $("#edit_marker_title_plane").attr('visible', "false");
+                    $("#edit_marker_card_text_plane").attr('visible', "false");
+
+                    // hide the save button
+                    let save_button = document.getElementById("editSaveBtn");
+                    save_button.setAttribute("onhover", "disabled: true");
+                    save_button.setAttribute("color", "#d8d8d8");
+
+                    // re-enable onhover
+                    $("#view_marker_left_select").attr('visible', "true");
+                    $("#view_marker_right_select").attr('visible', "true");
+
+                    break edit_card;
+                }
+
                 // copy current card contents into a variable
                 let curr_card_title = $("#view_marker_title").attr('value');
                 let curr_card_text = $("#view_marker_card_text").attr('value');
@@ -216,6 +283,11 @@
                 $("#edit_marker_card_text_plane").attr('visible', "true");
 
                 // disable left/right arrow selectors, or notify that you cannot move
+                // check state of either arrow 
+
+                // disable on-hover for both, but keep the same colour 
+                $("#view_marker_left_select").attr('visible', "false");
+                $("#view_marker_right_select").attr('visible', "false");
 
                 // change save button to be available 
                 let save_button = document.getElementById("editSaveBtn");
@@ -229,8 +301,6 @@
                 // get text of the plane 
                 let edit_text_field_name = el_clicked_id.slice(0, -6);
                 let edit_text = $(`#${edit_text_field_name}`).attr("value");
-
-                // console.log(el_clicked_id.attr("text"));
 
                 // add a plane behind the current plane
                 // get position, height, width of box
@@ -265,28 +335,247 @@
                 // set an attribute to show which field is being edited
                 $(`#${edit_text_field_name}`).attr("editing", "true");
 
-                // disable WASD controls for now
-                document.querySelector('[camera]').removeAttribute('wasd-controls');
+                // disable WASD controls if edit plane visible 
+                let is_visible = $("#edit_marker_card_text_plane").attr('visible');
+                if (is_visible) {
+                    document.querySelector('[camera]').removeAttribute('wasd-controls');
+                }
             }
 
             // behaviour if save button is selected
             if (el_clicked_id == "editSaveBtn") {
                 // store title and card content into variables
+                let edited_title = $("#edit_marker_title").attr('value');
+                let edited_card = $("#edit_marker_card_text").attr('value');
 
-                // send the content to be updated in the MongoDB DB
+                edited_title = edited_title.replaceAll('|', '');
+                edited_card = edited_card.replaceAll('|', '');
+
+                // pull which card is being edited
+                let edited_card_id = parseInt($("#view_marker_plane").attr("marker_curr_card_id")) - 1;
+
+                // pull which marker to be updated, also use this if marker value is to be updated
+                var curr_marker_value = $("#view_marker_plane").attr("marker_value");
+                console.log("saving " + curr_marker_value);
+
+                // edit the original JSON stored in the card
+                var data_str = $("#view_marker_plane").attr("marker_card_data");
+                var card_data = JSON.parse(decodeURIComponent(data_str));
+                var curr_card = card_data[edited_card_id];
+
+                curr_card.card_content = edited_card;
+
+                var data_to_send = {};
+                data_to_send.marker_value = curr_marker_value;
+                data_to_send.new_marker_value = curr_marker_value;
+                data_to_send.marker_title = edited_title;
+                data_to_send.cards = card_data;
 
                 // edit the original card to reflect these changes
+                $("#view_marker_title").attr("value", edited_title);
+                $("#view_marker_card_text").attr("value", edited_card);
+
+                // turn on marker selectors again
+                $("#view_marker_left_select").attr('visible', "true");
+                $("#view_marker_right_select").attr('visible', "true");
+
+                // send the content to be updated in the database as a post request
+                update_data("marker_update", data_to_send);
+
+                // edit the plane stored data
+                var card_data_str = encodeURIComponent(JSON.stringify(card_data));
+                $("#view_marker_plane").attr("marker_card_data", card_data_str);
+
+                // update IndexedDB database
+                var db_open_request = window.indexedDB.open('markers_db', 1);
+                db_open_request.onsuccess = function (event) {
+
+                    // store the result of opening the database in the db variable.
+                    db = db_open_request.result;
+                    var transaction = db.transaction(["markers_os"], "readwrite");
+                    var object_store = transaction.objectStore("markers_os");
+
+                    var cur_val_index = object_store.index('marker_value')
+                    var object_store_req = cur_val_index.get(curr_marker_value);
+
+                    object_store_req.onsuccess = function () {
+                        var marker_contents = object_store_req.result;
+
+                        marker_contents.marker_value = curr_marker_value;
+                        marker_contents.marker_title = edited_title;
+                        marker_contents.cards = card_data;
+
+                        const update_request = object_store.put(marker_contents);
+                        update_request.onsuccess = () => {
+                        }
+                    }
+                }
 
                 // hide the edit cards
+                $("#edit_marker_title_plane").attr("visible", "false");
+                $("#edit_marker_card_text_plane").attr("visible", "false");
 
+                // "turn off" save button once complete 
+                let save_button = document.getElementById("editSaveBtn");
+                save_button.setAttribute("onhover", "disabled: true");
+                save_button.setAttribute("color", "#d8d8d8");
             }
 
-            // behaviour if save as new button is selected - move this into above function to save repeating
-            if (el_clicked_id == "editSaveNewBtn") {
-                // perform same steps as saving
+            // if add/subtract card buttons are selected
+            add_remove_card: if (el_clicked_id.includes("editCard")) {
+                // taking card details from plane
+                var data_str = $("#view_marker_plane").attr("marker_card_data");
+                var card_data = JSON.parse(decodeURIComponent(data_str));
 
-                // change associated marker
+                // check whether adding or removing a card
+                let card_what = el_clicked_id.replace("editCard", "");
+                let card_what_dict = {
+                    "Add": 1,
+                    "Subtract": -1
+                }
+                let cw_val = card_what_dict[card_what];
+
+                if (card_data.length == 1 && card_what == "Subtract") {
+                    break add_remove_card;
+                }
+
+                // check for current card ID which is zero-indexed
+                let curr_card_id = parseInt($("#view_marker_plane").attr("marker_curr_card_id")) - 1;
+
+                let card_in_question_id;
+                let marker_text;
+                if (card_what == "Add") {
+                    // take the current card ID and incremenent by 1 
+                    card_in_question_id = curr_card_id + 1;
+                    marker_text = ""
+                } else if (card_what == "Subtract") {
+                    // don't change current card if removing
+                    card_in_question_id = curr_card_id;
+
+                    // try and pull the details of the next card which will take the current ID, if does not exist, go to previous 
+                    marker_text = card_data[card_in_question_id + cw_val].card_content;
+                }
+
+                // change current card ID 
+                $("#view_marker_plane").attr("marker_curr_card_id", card_in_question_id + 1);
+
+                // change card data to be empty 
+                $("#view_marker_card_text").attr("value", marker_text);
+
+                if (card_what == "Subtract") {
+                    card_data = card_data.filter(function (json_obj) {
+                        return json_obj.card_id != card_in_question_id;
+                    });
+                }
+
+                for (var i in card_data) {
+                    let lcc_id = card_data[i].card_id;
+                    if (lcc_id > curr_card_id) {
+                        card_data[i].card_id = `${parseInt(lcc_id) + cw_val}`;
+                    }
+                }
+
+                if (card_what == "Add") {
+                    // add new empty card
+                    let new_card = {
+                        card_id: `${card_in_question_id}`,
+                        card_content: ""
+                    }
+                    card_data.push(new_card);
+                }
+
+                // sort by card_id
+                card_data.sort(function (a, b) { return a.card_id - b.card_id });
+
+                // store the changes in the card plane
+                var card_data_str = encodeURIComponent(JSON.stringify(card_data));
+                $("#view_marker_plane").attr("marker_card_data", card_data_str);
+
+                // change the status card to be new card/(old total+1)
+                $("#card_tracker").attr("value", `${card_in_question_id + cw_val}/${card_data.length}`);
+
+                // change left and right select arrows 
+                let vm_left_marker = document.getElementById("view_marker_left_select");
+
+                // if removing first card and there'll be one left
+                let left_onhover = "disabled: false";
+                let left_color = "#303971";
+                let left_opacity = "0.7";
+                if (card_data.length == 1) {
+                    left_onhover = "disabled: true";
+                    left_color = "#d8d8d8";
+                    left_opacity = "0.5";
+                }
+                vm_left_marker.setAttribute("onhover", left_onhover);
+                vm_left_marker.setAttribute("color", left_color);
+                vm_left_marker.setAttribute("opacity", left_opacity);
+                vm_left_marker.setAttribute("select_card_id", `${card_in_question_id - 1}`);
+
+                // if last card, turn off going right 
+                let right_onhover = "disabled: false";
+                let right_color = "#303971";
+                let right_opacity = "0.7";
+                if ((card_in_question_id + 1 - card_data.length) == 0) {
+                    right_onhover = "disabled: true";
+                    right_color = "#d8d8d8";
+                    right_opacity = "0.5";
+                }
+                let vm_right_marker = document.getElementById("view_marker_right_select");
+                vm_right_marker.setAttribute("onhover", right_onhover);
+                vm_right_marker.setAttribute("color", right_color);
+                vm_right_marker.setAttribute("opacity", right_opacity);
+                vm_right_marker.setAttribute("select_card_id", `${card_in_question_id + 1}`);
+
+                // find which marker to be updated
+                var curr_marker_value = $("#view_marker_plane").attr("marker_value");
+
+                // store the changes in local IndexedDB
+                var db_open_request = window.indexedDB.open('markers_db', 1);
+                db_open_request.onsuccess = function (event) {
+                    // store the result of opening the database in the db variable.
+                    db = db_open_request.result;
+                    var transaction = db.transaction(["markers_os"], "readwrite");
+                    var object_store = transaction.objectStore("markers_os");
+
+                    var cur_val_index = object_store.index('marker_value')
+                    var object_store_req = cur_val_index.get(curr_marker_value);
+
+                    object_store_req.onsuccess = function () {
+                        var marker_contents = object_store_req.result;
+
+                        marker_contents.marker_value = curr_marker_value;
+                        marker_contents.cards = card_data;
+
+                        const update_request = object_store.put(marker_contents);
+                    }
+                }
+
+                // push changes to database
+                var data_to_send = {};
+                data_to_send.marker_value = curr_marker_value;
+                data_to_send.new_marker_value = curr_marker_value;
+                data_to_send.marker_title = $("#view_marker_title").attr('value');
+                data_to_send.cards = card_data;
+                update_data("marker_update", data_to_send);
             }
+
+            // if add/subtract marker buttons are selected
+            
+
+        }
+
+        function update_data(route, data) {
+            const XHR = new XMLHttpRequest();
+            XHR.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    // const returned_data = JSON.parse(this.responseText);
+                    // const num_items = returned_data.length;
+
+                }
+            };
+            XHR.open("POST", `https://192.168.1.101:8444/${route}/`);
+            XHR.setRequestHeader("Content-type", "application/json");
+            XHR.send(JSON.stringify(data));
         }
 
         AFRAME.registerComponent('onhover', {
@@ -371,7 +660,6 @@
             const wasd = ["w", "a", "s", "d"];
             if (wasd.includes((event.key).toLowerCase())) {
                 if (event.shiftKey) {
-                    console.log(event.key + " and shift");
                     document.querySelector('[camera]').setAttribute('wasd-controls', "enabled:true");
                 }
             }
@@ -399,7 +687,7 @@
 
                             // estimate the number of lines currently on
                             let card_est_num_lines = Math.floor(curr_num_chars / 36);
-                            console.log(curr_num_chars + " " + card_est_num_lines);
+                            // console.log(curr_num_chars + " " + card_est_num_lines);
 
                             // find number of characters, and if too many, stop entering more
                             if (curr_num_chars < total_characters) {
@@ -431,10 +719,6 @@
                                         $(`#${edit_text_field_name}`).attr("value", edit_text);
                                     }
                                 }
-
-
-
-
                             }
                         }
                     }
@@ -443,8 +727,6 @@
             }
 
             console.log(event.key);
-
-
 
             // render letters on the new plane
 
@@ -476,6 +758,8 @@
             <img id="iconChevron" src="assets/icons/arrow_white.png" />
             <img id="iconEdit" src="assets/icons/edit.png" />
             <img id="iconSave" src="assets/icons/save.png" />
+            <img id="iconAdd" src="assets/icons/add.png" />
+            <img id="iconSubtract" src="assets/icons/subtract.png" />
 
             <template id="avatar-template" type="text/html">
                 <a-entity class="avatar" networked-audio-source>
@@ -515,37 +799,7 @@
 
             <a-plane id="marker_selector" material="side: double; color: #303971; transparent: true; opacity: 0.7"
                 position="-1.8 0 0" height="1.2" width="1">
-                <!-- CHANGE THESE MARKERS TO BE GENERATE PROGRAMATICALLY!!!! -->
-                <a-plane id="select_marker1" material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5"
-                    position="0 0.48 0.01" height="0.24" width="1" onhover="disabled: true">
-                    <a-text id="select_marker1_text" position="-0.45 -0.05 0" scale="0.3 0.3 0.3" shader="msdf"
-                        font="https://raw.githubusercontent.com/etiennepinchon/aframe-fonts/master/fonts/roboto/Roboto-Italic.json"
-                        value="No marker available"></a-text>
-                </a-plane>
-                <a-plane id="select_marker2" material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5"
-                    position="0 0.24 0.01" height="0.24" width="1" onhover="disabled: true">
-                    <a-text id="select_marker2_text" position="-0.45 -0.05 0" scale="0.3 0.3 0.3" shader="msdf"
-                        font="https://raw.githubusercontent.com/etiennepinchon/aframe-fonts/master/fonts/roboto/Roboto-Italic.json"
-                        value="No marker available"></a-text>
-                </a-plane>
-                <a-plane id="select_marker3" material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5"
-                    position="0 0 0.01" height="0.24" width="1" onhover="disabled: true">
-                    <a-text id="select_marker3_text" position="-0.45 -0.05 0" scale="0.3 0.3 0.3" shader="msdf"
-                        font="https://raw.githubusercontent.com/etiennepinchon/aframe-fonts/master/fonts/roboto/Roboto-Italic.json"
-                        value="No marker available"></a-text>
-                </a-plane>
-                <a-plane id="select_marker4" material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5"
-                    position="0 -0.24 0.01" height="0.24" width="1" onhover="disabled: true">
-                    <a-text id="select_marker4_text" position="-0.45 -0.05 0" scale="0.3 0.3 0.3" shader="msdf"
-                        font="https://raw.githubusercontent.com/etiennepinchon/aframe-fonts/master/fonts/roboto/Roboto-Italic.json"
-                        value="No marker available"></a-text>
-                </a-plane>
-                <a-plane id="select_marker5" material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5"
-                    position="0 -0.48 0.01" height="0.24" width="1" onhover="disabled: true">
-                    <a-text id="select_marker5_text" position="-0.45 -0.05 0" scale="0.3 0.3 0.3" shader="msdf"
-                        font="https://raw.githubusercontent.com/etiennepinchon/aframe-fonts/master/fonts/roboto/Roboto-Italic.json"
-                        value="No marker available"></a-text>
-                </a-plane>
+                <!-- Markers are generated programatically -->
             </a-plane>
 
             <a-plane material="side: double; color: #303971; transparent: true; opacity: 0.7" position="-1.8 -0.7 0"
@@ -554,12 +808,25 @@
                     value="Viewing markers 1 to 5 out of #"></a-text>
             </a-plane>
 
-            <a-plane id="selector_up" material="side: double; color: #303971; transparent: true; opacity: 0.7;"
+            <!-- Add and delete markers -->
+            <a-plane id="editMarkerAdd" material="side: double; color: #303971; transparent: true; opacity: 0.5;"
+                position="-1.67 -0.9 0" height="0.2" width="0.2" depth="0.02" onhover="disabled: false">
+                <a-image src="#iconAdd" material="alphaTest: 0.5" position="-0.001 0 0.01" scale="0.1 0.1 0.1">
+                </a-image>
+            </a-plane>
+            <a-plane id="editMarkerSubtract" material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5;"
+                position="-1.41 -0.9 0" height="0.2" width="0.2" depth="0.02" onhover="disabled: true">
+                <a-image src="#iconSubtract" material="alphaTest: 0.5" position="-0.001 0 0.01" scale="0.1 0.1 0.1">
+                </a-image>
+            </a-plane>
+
+            <!-- Moving through the list of markers -->
+            <a-plane id="markers_select_up" material="side: double; color: #303971; transparent: true; opacity: 0.7;"
                 position="-1.15 0.12 0" height="0.2" width="0.2" depth="0.02" onhover>
                 <a-image src="#iconChevron" material="alphaTest: 0.5" position="0 0 0.01" width="1" scale="0.1 0.1 0.1"
                     rotation="0 0 90"></a-image>
             </a-plane>
-            <a-plane id="selector_down" material="side: double; color: #303971; transparent: true; opacity: 0.7;"
+            <a-plane id="markers_select_down" material="side: double; color: #303971; transparent: true; opacity: 0.7;"
                 position="-1.15 -0.12 0" height="0.2" width="0.2" depth="0.02" onhover>
                 <a-image src="#iconChevron" material="alphaTest: 0.5" position="0 0 0.01" width="1" scale="0.1 0.1 0.1"
                     rotation="0 0 -90"></a-image>
@@ -631,10 +898,16 @@
                 <a-image src="#iconSave" material="alphaTest: 0.5" position="0 0.001 0.01" scale="0.1 0.1 0.1">
                 </a-image>
             </a-plane>
-            <a-plane material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5;" position="0.13 -0.5 0"
-                height="0.2" width="0.2" depth="0.02" onhover="disabled: true"></a-plane>
-            <a-plane material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5;" position="0.39 -0.5 0"
-                height="0.2" width="0.2" depth="0.02" onhover="disabled: true"></a-plane>
+            <a-plane id="editCardAdd" material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5;"
+                position="0.13 -0.5 0" height="0.2" width="0.2" depth="0.02" onhover="disabled: true">
+                <a-image src="#iconAdd" material="alphaTest: 0.5" position="-0.001 0 0.01" scale="0.1 0.1 0.1">
+                </a-image>
+            </a-plane>
+            <a-plane id="editCardSubtract" material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5;"
+                position="0.39 -0.5 0" height="0.2" width="0.2" depth="0.02" onhover="disabled: true">
+                <a-image src="#iconSubtract" material="alphaTest: 0.5" position="-0.001 0 0.01" scale="0.1 0.1 0.1">
+                </a-image>
+            </a-plane>
 
         </a-entity>
 
@@ -801,17 +1074,15 @@
             objectStore.openCursor().addEventListener('success', e => {
                 // Get a reference to the cursor
                 const cursor = e.target.result;
-                console.log(cursor);
 
                 // If there is still another data item to iterate through, keep running this code
                 if (cursor) {
                     if (cursor_count < 6) {
                         // Setting title text of the marker to text field
                         const marker_title = cursor.value.marker_title;
-                        const mt_capitalised = marker_title.charAt(0).toUpperCase() + marker_title.slice(1);
 
                         const marker_el_text = document.getElementById(`select_marker${cursor_count}_text`);
-                        marker_el_text.setAttribute("value", `#${cursor_count}: ${mt_capitalised}`);
+                        marker_el_text.setAttribute("value", `#${cursor_count}: ${marker_title}`);
                         marker_el_text.setAttribute("marker_id", `${cursor.value.marker_id}`);
 
                         // Set marker ID value for AR.js to the parent a-plane entity of the marker title
@@ -844,10 +1115,6 @@
 
                 // Make a request to add our newItem object to the object store
                 const addRequest = objectStore.add(newItem);
-
-                addRequest.addEventListener('success', () => {
-
-                });
             }
 
             // Report on the success of the transaction completing, when everything is done
@@ -885,15 +1152,11 @@
                     const openRequest = window.indexedDB.open('markers_db', 1);
                     openRequest.addEventListener('error', () => console.error('Database failed to open'));
                     openRequest.addEventListener('success', () => {
-                        // console.log('Database opened successfully');
-
                         // Store the opened database object in the db variable. This is used a lot below
                         db = openRequest.result;
 
                         // adding the data returned from the server to IDB and render first five markers
                         addData(db, returned_data);
-
-
                     });
 
                     openRequest.addEventListener('upgradeneeded', e => {
@@ -909,8 +1172,6 @@
                         objectStore.createIndex('marker_id', 'marker_id', { unique: false });
                         objectStore.createIndex('marker_title', 'marker_title', { unique: false });
                         objectStore.createIndex('marker_value', 'marker_value', { unique: false });
-
-                        // console.log('Database setup complete');
                     });
 
                     // console.log(returned_data);
@@ -952,6 +1213,36 @@
         document.addEventListener('DOMContentLoaded', () => {
             // request from the database, the shortlist of IDs
             retrieve_data("markers");
+
+            // create the select_markers progrmatically 
+            // find the marker_selector item
+            const marker_selector_el = document.getElementById("marker_selector");
+
+            // loop through enumerated five and create the markers
+            let marker_y_dist = 0.48; // starting y_dist for first marker
+            for (var i = 0; i < 5; i++) {
+                const new_marker_to_select = document.createElement("a-plane");
+                new_marker_to_select.setAttribute("id", `select_marker${i + 1}`);
+                new_marker_to_select.setAttribute("material", "side: double; color: #d8d8d8; transparent: true; opacity: 0.5");
+                new_marker_to_select.setAttribute("position", `0 ${marker_y_dist} 0.01`);
+                new_marker_to_select.setAttribute("height", "0.24");
+                new_marker_to_select.setAttribute("width", "1");
+                new_marker_to_select.setAttribute("onhover", "disabled: true");
+
+                // text inside the marker selector
+                const nmts_text = document.createElement("a-text");
+                nmts_text.setAttribute("id", `select_marker${i + 1}_text`);
+                nmts_text.setAttribute("position", "-0.45 -0.05 0");
+                nmts_text.setAttribute("scale", "0.3 0.3 0.3");
+                nmts_text.setAttribute("shader", "msdf");
+                nmts_text.setAttribute("font", "https://raw.githubusercontent.com/etiennepinchon/aframe-fonts/master/fonts/roboto/Roboto-Italic.json");
+                nmts_text.setAttribute("value", "No marker available");
+
+                new_marker_to_select.appendChild(nmts_text);
+                marker_selector_el.appendChild(new_marker_to_select);
+
+                marker_y_dist -= 0.24;
+            }
         });
     </script>
 
