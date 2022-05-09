@@ -140,6 +140,21 @@ async function marker_insert(marker) {
 	}
 }
 
+async function marker_delete(marker) {
+	try {
+		await client.connect();
+		const database = client.db("5gwebxr");
+		const marker_details = database.collection("markers");
+
+		const query = { marker_id: marker.marker_id };
+
+		const result = await marker_details.deleteOne(query);
+		console.log(`A marker was deleted with the _id: ${result.insertedId}`);
+	} finally {
+		await client.close();
+	}
+}
+
 
 const app = express();
 app.use(cors({ origin: '*' }));
@@ -191,6 +206,12 @@ app.post('/marker_update', express.json(), (req, res) => {
 app.post('/marker_insert', express.json(), (req,res) => {
 	marker_insert(req.body)
 	console.log("Inserting new marker");
+	res.sendStatus(200);
+});
+
+app.post('/marker_delete', express.json(), (req,res) => {
+	marker_delete(req.body)
+	console.log("Deleting marker");
 	res.sendStatus(200);
 });
 

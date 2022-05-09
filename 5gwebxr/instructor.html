@@ -62,7 +62,6 @@
             let selected_marker = el_clicked_id;
             let selected_marker_id = document.getElementById(`${selected_marker}_text`).getAttribute("marker_id");
             let selected_marker_value = document.getElementById(`${selected_marker}`).getAttribute("marker_val");
-            console.log(selected_marker_id + " " + selected_marker_value);
 
             // get entire marker data from IndexedDB
             var db_open_request = window.indexedDB.open('markers_db', 1);
@@ -74,6 +73,7 @@
                 var object_store = transaction.objectStore("markers_os");
 
                 var cur_val_index = object_store.index('marker_id')
+                $("#view_marker_plane").attr("marker_id", selected_marker_id);
                 var object_store_req = cur_val_index.get(selected_marker_id);
 
                 object_store_req.onsuccess = function (event) {
@@ -190,7 +190,7 @@
 
             // behaviour if selecting previous/next buttons on card
             const card_select_conditions = ["view_marker_", "_select"];
-            let card_arrow_select = card_select_conditions.some(el => el_clicked_id.includes(el));
+            let card_arrow_select = card_select_conditions.every(el => el_clicked_id.includes(el));
             card_selector: if (card_arrow_select) {
                 // pull the select_card_id attribute from the arrow 
                 let card_arrow_selected = document.getElementById(el_clicked_id).getAttribute("select_card_id");
@@ -565,103 +565,148 @@
             // if add/subtract marker buttons are selected
             if (el_clicked_id.includes("editMarker")) {
                 // check if add or removing a marker
-                let card_what = el_clicked_id.replace("editCard", "");
+                let card_what = el_clicked_id.replace("editMarker", "");
 
                 // if adding a marker
+                if (card_what == "Add") {
+                    // check which fiducial markers have been assigned by polling IndexedDB
+                    async function markers_val_search() {
+                        return new Promise(function (resolve, reject) {
+                            var db_open_request = window.indexedDB.open('markers_db', 1);
+                            db_open_request.onsuccess = function (event) {
+                                db = db_open_request.result;
+                                var transaction = db.transaction(["markers_os"], "readwrite");
+                                var object_store = transaction.objectStore("markers_os");
 
-                // check which fiducial markers have been assigned by polling IndexedDB
+                                // var cur_val_index = object_store.index('marker_value')
+                                var object_store_req = object_store.getAll();
+                                object_store_req.onsuccess = function (event) {
+                                    var marker_contents = object_store_req.result;
+                                    used_marker_values = marker_contents.map(function (el) { return parseInt(el.marker_value); });
+                                    resolve(used_marker_values)
+                                }
+                            }
+                        });
+                    }
 
-                async function markers_val_search() {
-                    return new Promise(function (resolve, reject) {
-                        var db_open_request = window.indexedDB.open('markers_db', 1);
-                        db_open_request.onsuccess = function (event) {
-                            db = db_open_request.result;
+                    markers_val_search().then(function (result) {
+                        var used_marker_values = result;
+                        // if fiducial index has not been used, use that, alternatively, use largest integer+1
+                        // sort to be in numerical order
+                        used_marker_values.sort(function (a, b) { return a.marker_value - b.marker_value });
+                        var largest_used_marker_val = used_marker_values.at(-1);
+
+                        // if order is correct and there are no missing markers
+                        var missing_markers = new Array();
+                        for (var i = 1; i <= largest_used_marker_val; i++) {
+                            if (used_marker_values.indexOf(i) == -1) {
+                                missing_markers.push(i);
+                            }
+                        }
+
+                        // set details of the new marker
+                        var new_marker_val = largest_used_marker_val + 1;
+                        var new_marker = {
+                            marker_value: `${new_marker_val}`,
+                            marker_id: `${Math.random().toString(36).slice(2)}`,
+                            marker_title: `Marker ${new_marker_val + 1}`,
+                            cards: [
+                                {
+                                    card_id: "0",
+                                    card_content: "Edit to set marker content"
+                                }
+                            ]
+                        }
+
+                        // add marker to IndexedDB
+                        var dbor_add = window.indexedDB.open('markers_db', 1);
+                        dbor_add.onsuccess = function (event) {
+                            db = dbor_add.result;
                             var transaction = db.transaction(["markers_os"], "readwrite");
                             var object_store = transaction.objectStore("markers_os");
 
-                            // var cur_val_index = object_store.index('marker_value')
-                            var object_store_req = object_store.getAll();
-
-                            object_store_req.onsuccess = function (event) {
-                                var marker_contents = object_store_req.result;
-                                used_marker_values = marker_contents.map(function (el) { return parseInt(el.marker_value); });
-                                resolve(used_marker_values)
-                            }
+                            const add_marker_req = object_store.add(new_marker);
                         }
+
+                        // add marker to database
+                        update_data("marker_insert", new_marker);
+
+                        // reload list of markers, i.e., shuffle down 
+                        var db_open_request = window.indexedDB.open('markers_db', 1);
+                        db_open_request.onsuccess = function (event) {
+                            db = db_open_request.result;
+                            displayData(db, "new_marker", 0);
+                        }
+
                     });
+                } else if (card_what == "Subtract") {
+                    // pull the selected marker_id from the marker
+                    var marker_to_delete_id = $("#view_marker_plane").attr("marker_id");
 
-                }
-
-                markers_val_search().then(function (result) {
-                    var used_marker_values = result;
-                    // if fiducial index has not been used, use that, alternatively, use largest integer+1
-                    // sort to be in numerical order
-                    used_marker_values.sort(function (a, b) { return a.marker_value - b.marker_value });
-                    var largest_used_marker_val = used_marker_values.at(-1);
-
-                    var missing_markers = new Array();
-                    for (var i = 1; i <= largest_used_marker_val; i++) {
-                        if (used_marker_values.indexOf(i) == -1) {
-                            missing_markers.push(i);
-                        }
-                    }
-                    // if order is correct and there are no missing markers
-
-                    // set details of the new marker
-                    var new_marker_val = largest_used_marker_val + 1;
-                    var new_marker = {
-                        marker_value: `${new_marker_val}`,
-                        marker_id: `${Math.random().toString(36).slice(2)}`,
-                        marker_title: `Marker ${new_marker_val + 1}`,
-                        cards: [
-                            {
-                                card_id: "0",
-                                card_content: "Edit to set marker content"
-                            }
-                        ]
-                    }
-
-                    // // change card viewer to new card details
-                    // $("#view_marker_title").attr("value", new_marker.marker_title);
-                    // $("#view_marker_plane").attr("marker_curr_card_id", "1");
-                    // $("#view_marker_plane").attr("marker_value", new_marker_val);
-                    // $("#view_marker_card_text").attr("value", new_marker.cards[0].card_content);
-                    // $("#card_tracker").attr("value", `1/1`);
-
-                    // // set card details onto the plane
-                    // var card_data_str = encodeURIComponent(JSON.stringify(new_marker.cards));
-                    // $("#view_marker_plane").attr("marker_card_data", card_data_str);
-
-                    // add marker to IndexedDB
-                    var dbor_add = window.indexedDB.open('markers_db', 1);
-                    dbor_add.onsuccess = function (event) {
-                        db = dbor_add.result;
-                        var transaction = db.transaction(["markers_os"], "readwrite");
-                        var object_store = transaction.objectStore("markers_os");
-
-                        const add_marker_req = object_store.add(new_marker);
-                    }
-
-                    // add marker to database
-                    update_data("marker_insert", new_marker);
-
-                    // reload list of markers, i.e., shuffle down 
+                    // search IndexedDB and remove
                     var db_open_request = window.indexedDB.open('markers_db', 1);
                     db_open_request.onsuccess = function (event) {
+                        // store the result of opening the database in the db variable.
                         db = db_open_request.result;
-                        displayData(db, "new_marker");
+                        var transaction = db.transaction(["markers_os"], "readwrite");
+                        var object_store = transaction.objectStore("markers_os");
+                        // var request = transaction.objectStore("markers_os").delete(marker_to_delete_id);
 
+                        var cur_val_index = object_store.index('marker_id')
+                        var object_store_req = cur_val_index.get(marker_to_delete_id);
+
+                        // console.log(marker_to_delete_id);
+
+                        object_store_req.onsuccess = function () {
+                            var marker_contents = object_store_req.result;
+                            object_store.delete(marker_contents.id);
+
+                            var marker_to_delete = {
+                                marker_id: marker_to_delete_id
+                            }
+
+                            // tell database to remove 
+                            update_data("marker_delete", marker_to_delete);
+
+                            // reload list of markers, i.e., shuffle down 
+                            var db_open_request = window.indexedDB.open('markers_db', 1);
+                            db_open_request.onsuccess = function (event) {
+                                db = db_open_request.result;
+                                displayData(db, "update_list", 0);
+                            }
+
+                            // find which marker in selector list was selected
+                            var marker_loc;
+                            for (var i = 1; i <= 5; i++) {
+                                var curr_el = $(`#select_marker${i}_text`).attr("marker_id");
+                                if (curr_el == marker_to_delete_id) {
+                                    marker_loc = i;
+                                }
+                            }
+                        }
                     }
 
-
-
-                    // enable edit and add new card buttons
-
-
-                    // update associated marker icon
-                });
+                }
             }
 
+            // if up and down buttons are selected on the markers list
+            if (el_clicked_id.includes("markers_select")) {
+                let marker_list_what = el_clicked_id.replace("markers_select_", "");
+                let mlw_dict = {
+                    down: 1,
+                    up: -1
+                }
+
+                console.log(mlw_dict[marker_list_what]);
+
+                // if up or down selected, move list either way by one
+                var db_open_request = window.indexedDB.open('markers_db', 1);
+                db_open_request.onsuccess = function (event) {
+                    db = db_open_request.result;
+                    displayData(db, "update_list", mlw_dict[marker_list_what]);
+                }
+
+            }
         }
 
         function update_data(route, data) {
@@ -829,7 +874,6 @@
             console.log(event.key);
 
             // render letters on the new plane
-
 
             // add ability to move that cursor and scan through the text            
 
@@ -1166,7 +1210,7 @@
     </script>
 
     <script>
-        function displayData(db, what_to_show) {
+        function displayData(db, type, amount) {
             // Open our object store and then get a cursor - which iterates through all the
             // different data items in the store
             const objectStore = db.transaction('markers_os').objectStore('markers_os');
@@ -1182,20 +1226,58 @@
                     count_request.onsuccess = function () {
                         var total_markers = count_request.result;
                         marker_show: if (cursor_count <= total_markers) {
-                            if (what_to_show == "new_marker" && cursor_count < (total_markers - 4) || what_to_show == "default" && cursor_count > 6) {
+                            if (type == "new_marker" && cursor_count < (total_markers - 4) || type == "default" && cursor_count > 5 ) {
                                 // if new marker added, do not update markers list until total_markers-5 cycled through 
                                 break marker_show;
                             }
 
-                            if (what_to_show == "new_marker" && cursor_count == (total_markers - 4)) {
+                            if (type == "new_marker" && cursor_count == (total_markers - 4)) {
                                 select_marker_count = 0;
                             }
 
-                            // Setting title text of the marker to text field
-                            const marker_title = cursor.value.marker_title;
+                            if (type == "update_list" && amount == 0) {
+                                // behaviour if total_markers less than number 5
+                                if (total_markers < 6) {
+                                    // loop and set the markers as default not available
+                                    for (var i = 1; i < 6; i++) {
+                                        if (i > total_markers) {
+                                            console.log(i + " " + total_markers);
+                                            var marker_to_change_text = document.getElementById(`select_marker${i}_text`);
+                                            marker_to_change_text.setAttribute("value", "No marker available");
 
+                                            var marker_to_change = document.getElementById(`select_marker${i}`);
+                                            marker_to_change.setAttribute("onhover", "disabled: true");
+                                            marker_to_change.setAttribute("material", "side: double; color: #d8d8d8; transparent: true; opacity: 0.5");
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (type == "update_list" && amount != 0) {
+                                // find current first and last markers
+                                var first_marker_idb_id = $("#select_marker1_text").attr("idb_id");
+                                var fifth_marker_idb_id = $("#select_marker5_text").attr("idb_id");
+
+                                var new_start_id = parseInt(first_marker_idb_id) + amount;
+                                if ((new_start_id-cursor_count)>0) {
+                                    // avoid rendering first marker
+                                    select_marker_count = -1;
+                                    break marker_show;
+                                }
+
+                                // don't do anything if last marker is greater than total number of markers
+                                if (fifth_marker_idb_id == (total_markers-1)) {
+                                    // disable down selector
+                                }
+
+                            }
+
+                            console.log(cursor.value.marker_id + " " + (select_marker_count+1) + " " + cursor.value.marker_title + " " + cursor_count);
+
+                            // Setting title text of the marker to text field
                             const marker_el_text = document.getElementById(`select_marker${select_marker_count + 1}_text`);
-                            marker_el_text.setAttribute("value", `#${cursor_count}: ${marker_title}`);
+                            marker_el_text.setAttribute("value", `#${cursor_count}: ${cursor.value.marker_title}`);
+                            marker_el_text.setAttribute("idb_id", `${cursor.value.id}`);
                             marker_el_text.setAttribute("marker_id", `${cursor.value.marker_id}`);
 
                             // Set marker ID value for AR.js to the parent a-plane entity of the marker title
@@ -1204,7 +1286,7 @@
                             marker_el.setAttribute("color", "#303971")
                             marker_el.setAttribute("onhover", "disabled: false");
 
-                            if (cursor_count == total_markers) {
+                            if (cursor_count == total_markers && type == "new_marker") {
                                 // change active selected marker on the list to the new marker (it will always be last one)
                                 selected_marker("select_marker5");
                             }
@@ -1215,6 +1297,7 @@
                     // Iterate to the next item in the cursor
                     cursor.continue();
                 }
+
                 const view_markers = document.getElementById(`viewing_markers`);
                 view_markers.setAttribute("value", `Viewing markers 1 to ${cursor_count - 1} out of ${cursor_count - 1}`);
             });
@@ -1242,7 +1325,7 @@
                 // console.log('Transaction completed: database modification finished.');
 
                 // update the display of data to show the newly added item, by running displayData() again.
-                displayData(db, "default");
+                displayData(db, "default", 0);
             });
 
             transaction.addEventListener('error', () => console.log('Transaction not opened due to error'));
@@ -1330,8 +1413,7 @@
             XHR.send();
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            // create the select_markers progrmatically 
+        function fill_select_list() {
             // find the marker_selector item
             const marker_selector_el = document.getElementById("marker_selector");
 
@@ -1360,6 +1442,11 @@
 
                 marker_y_dist -= 0.24;
             }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // create the select_markers progrmatically 
+            fill_select_list();
 
             // request from the database, and fill the marker placeholders
             retrieve_data("markers");
