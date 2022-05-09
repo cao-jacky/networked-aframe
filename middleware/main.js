@@ -43,35 +43,6 @@ async function user_insert(user) {
 	}
 }
 
-async function marker_insert() {
-	try {
-		await client.connect();
-		const database = client.db("5gwebxr");
-		const marker_details = database.collection("markers");
-
-		const marker = {
-			marker_value: "1",
-			marker_id: "laser_panel",
-			marker_title: "Control panel",
-			cards: [
-				{
-					card_id: "0",
-					card_content: "test"
-				},
-				{
-					card_id: "1",
-					card_content: "ajlsdnlaskd"
-				}
-			]
-		}
-
-		const result = await marker_details.insertOne(marker);
-		console.log(`A document was inserted with the _id: ${result.insertedId}`);
-	} finally {
-		await client.close();
-	}
-}
-
 function iterateFunc(doc) {
 	console.log(JSON.stringify(doc, null, 4));
 }
@@ -139,7 +110,6 @@ async function marker_update(data) {
 
 		// create a filter for the marker to update - selecting which by using new marker value
 		const filter = { marker_value: data.marker_value };
-
 		const update_document = {
 			$set: {
 				marker_value: data.new_marker_value,
@@ -152,19 +122,24 @@ async function marker_update(data) {
 		console.log(
 			`${result.matchedCount} document(s) matched the filter, updated ${result.modifiedCount} document(s)`,
 		);
-
-
-		// const user_doc = {
-		// 	first_name: user_json["fname"],
-		// 	surname: user_json["lname"],
-		// 	id: Math.random().toString(36).slice(2),
-		// }
-		// const result = await user_details.insertOne(user_doc);
-		// console.log(`A document was inserted with the _id: ${result.insertedId}`);
 	} finally {
 		await client.close();
 	}
 }
+
+async function marker_insert(marker) {
+	try {
+		await client.connect();
+		const database = client.db("5gwebxr");
+		const marker_details = database.collection("markers");
+
+		const result = await marker_details.insertOne(marker);
+		console.log(`A marker was inserted with the _id: ${result.insertedId}`);
+	} finally {
+		await client.close();
+	}
+}
+
 
 const app = express();
 app.use(cors({ origin: '*' }));
@@ -199,7 +174,6 @@ app.get('/marker_ids', (req, res) => {
 });
 
 app.get('/markers', (req, res) => {
-	// marker_insert();
 	let marker_lists = marker_retrieve("all");
 	marker_lists.then(function (result) {
 		res.status(200)
@@ -209,16 +183,14 @@ app.get('/markers', (req, res) => {
 });
 
 app.post('/marker_update', express.json(), (req, res) => {
-	console.log(req.body);
 	marker_update(req.body);
 	console.log("Updating marker details");
-	// marker_insert();
-	// let marker_lists = marker_retrieve("all");
-	// marker_lists.then(function (result) {
-	// 	res.status(200)
-	// 	res.send(result);
-	// 	console.log("Sent markers to client");
-	// })
+	res.sendStatus(200);
+});
+
+app.post('/marker_insert', express.json(), (req,res) => {
+	marker_insert(req.body)
+	console.log("Inserting new marker");
 	res.sendStatus(200);
 });
 
