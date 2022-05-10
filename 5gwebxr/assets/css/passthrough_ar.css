@@ -6,6 +6,14 @@
     transform: translateX(-50%);
 }
 
+.card_selector {
+    position: absolute;
+    display: flex;
+    bottom: 7%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
 #config_menu {
     position: absolute;
     display: flex;

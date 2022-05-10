@@ -15,7 +15,8 @@
 
     <!-- <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-aframe.prod.js"></script> -->
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 
     <script src="https://unpkg.com/networked-aframe@^0.9.0/dist/networked-aframe.min.js"
         crossorigin="anonymous"></script>
@@ -33,11 +34,8 @@
 <body>
     <a-scene
         arjs="trackingMethod: best; sourceType: webcam;debugUIEnabled: false; sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
-        color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" 
-        vr-mode-ui="enabled: false"
-        device-orientation-permission-ui="enabled: false" 
-        gesture-detector
-        networked-scene="
+        color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false"
+        device-orientation-permission-ui="enabled: false" gesture-detector networked-scene="
         room: 1;
         debug: false;
         adapter: janus;
@@ -50,83 +48,40 @@
                 src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.4/examples/image-tracking/assets/card-example/softmind/scene.gltf">
             </a-asset-item>
 
-            <img id="chevron" src="/assets/arrow_white.png" />
+            <img id="chevron" src="assets/icons/arrow_white.png" />
 
             <template id="avatar-template" type="text/html">
                 <a-entity class="avatar" networked-audio-source>
-                    <a-plane id="avatarPlane" width="1.5" height="1.5" position="0 1 0" 
-                    rotation="0 0 0" material="side: front" networked-video-source></a-plane>                  
+                    <a-plane id="avatarPlane" width="1.5" height="1.5" position="0 1 0" rotation="0 0 0"
+                        material="side: front" networked-video-source></a-plane>
                 </a-entity>
             </template>
 
             <template id="test" type="text/html">
-                <a-plane position="0 0.3 0" id="data_item" material="side: double; color: #303971; transparent: true; opacity: 0.5" height="0.7" width="1" depth="0.01">
+                <a-plane position="0 0.3 0" id="data_item"
+                    material="side: double; color: #303971; transparent: true; opacity: 0.5" height="0.7" width="1"
+                    depth="0.01">
                 </a-plane>
             </template>
-        
+
+            <a-asset-item id="bowser" src="https://cdn.glitch.com/06bd98b4-97ee-4c07-a546-fe39ca205034%2Fbowser.glb">
+            </a-asset-item>
+
         </a-assets>
 
         <a-camera look-controls="enabled: false" wasd-controls="enabled: false" position="0 0 0" fit>
-            <a-entity 
-                id="player" 
-                networked="template:#avatar-template;attachTemplateToLocal:false;" 
-                position="0 -6 -1" rotation="0 0 0">
+            <a-entity id="player" networked="template:#avatar-template;attachTemplateToLocal:false;" position="0 -6 -1"
+                rotation="0 0 0" onhover>
             </a-entity>
 
-    
-            <!-- <a-marker type="barcode" size="0.06" value="0" id="marker0" registerevents>
-                <a-entity id="markerContent" scale="4 2 4" rotation="-45 0 0" gesture-handler >
-                    <a-entity >
-                        <a-plane id="markerPlane" material="side: double; color: #303971; transparent: true; opacity: 0.75" height="0.7" width="1" depth="0.01">
-                            <a-text id="markerTitle" position="-0.47 0.25 0.02" scale="0.5 0.5 0.5" value="Computer"></a-text>
-                            <a-text id="markerContent" position="-0.46 0.13 0.02" wrap-count="26" scale="0.15 0.15 0.15" value="Use this computer to set the settings of the laser cutter."></a-text>
-                        </a-plane>
-                    </a-entity>
-        
-                    <a-circle material="side: double; color: #303971; transparent: true; opacity: 0.5" position="-0.7 0 0" radius="0.1">
-                        <a-image src="#chevron" material="alphaTest: 0.5" position="0 0 0.01" width="1" scale="0.1 0.1 0.1" rotation="0 180 0"></a-image>
-                    </a-circle>
-    
-                    <a-circle material="side: double; color: #303971; transparent: true; opacity: 0.5" position="0.7 0 0" radius="0.1">
-                        <a-image src="#chevron" material="alphaTest: 0.5" position="0 0 0.01" width="1" scale="0.1 0.1 0.1" rotation="0 0 0"></a-image>
-                    </a-circle>
-        
-                    <a-plane material="side: double; color: #303971; transparent: true; opacity: 0" position="0 -0.5 0" height="0.2" width="1" depth="0.01">
-                        <a-plane material="side: double; color: #303971; transparent: true; opacity: 0.5;" position="-0.39 0 0" height="0.2" width="0.2" depth="0.02"></a-plane>
-                        <a-plane material="side: double; color: #303971; transparent: true; opacity: 0.5;" position="-0.13 0 0" height="0.2" width="0.2" depth="0.02"></a-plane>
-                        <a-plane material="side: double; color: #303971; transparent: true; opacity: 0.5;" position="0.13 0 0" height="0.2" width="0.2" depth="0.02"></a-plane>
-                        <a-plane material="side: double; color: #303971; transparent: true; opacity: 0.5;" position="0.39 0 0" height="0.2" width="0.2" depth="0.02"></a-plane>
-                    </a-plane>
-                </a-entity>
-            </a-marker> -->
-
-            <!-- <a-marker type="barcode" size="0.06" value="1" id="stextA" registerevents>
-                <a-entity
-                    position="0 0 0"
-                    scale="0.05 0.05 0.05"
-                    gltf-model="https://arjs-cors-proxy.herokuapp.com/https://raw.githack.com/AR-js-org/AR.js/master/aframe/examples/image-tracking/nft/trex/scene.gltf"
-                    ></a-entity>
-            </a-marker> -->
-
         </a-camera>
-        
-            
-            <!-- <a-marker type="barcode" size="0.06" value="10" id="ttextA" registerevents>
-                <a-entity >
-                </a-entity>
-            </a-marker> -->
-        </a-entity>
-
-    </a-entity>
-
-
     </a-scene>
 
     <style>
         .actions {
             position: absolute;
             display: flex;
-            bottom: 3%;
+            bottom: 0.5%;
             left: 3%;
         }
 
@@ -175,7 +130,7 @@
         }
     </style>
 
-    
+
     <div class="actions">
         <button id="camera-btn" type="button" class="button">Show Camera</button>
         <!-- <button id="scene-btn" type="button" class="button">Start streaming scene</button> -->
@@ -183,10 +138,16 @@
 
     <!-- Button to spawn the interaction menu -->
     <div class="overlay_menu">
-        <button id="menu_btn" type="button">Menu</button>
+        <button id="menu_btn" type="button" hidden>Menu</button>
     </div>
 
-    <div class="overlay_box" id="config_menu" style="display: none;"> 
+    <div class="card_selector" id="card_selector">
+        <button class="menu_items" type="button" id="card_left_select" hidden>
+            < </button>
+                <button class="menu_items" type="button" id="card_right_select" hidden> > </button>
+    </div>
+
+    <div class="overlay_box" id="config_menu" style="display: none;">
         <div>hello</div>
         <button class="menu_items" type="button" id="menu_usr_btn">User</button>
     </div>
@@ -204,7 +165,7 @@
             <input type="text" id="fname" name="fname"><br>
             <label for="lname">Last name:</label><br>
             <input type="text" id="lname" name="lname"><br>
-            <input class="submit_btn" id="user_create_submit_btn" type="submit" value="Submit" >
+            <input class="submit_btn" id="user_create_submit_btn" type="submit" value="Submit">
         </form>
     </div>
 
@@ -266,6 +227,9 @@
 
             const status_box_el = document.getElementById('status_box');
 
+            const card_left_el = document.getElementById('card_left_select');
+            const card_right_el = document.getElementById('card_right_select');
+
             const stopAndRemoveVideoTrack = async () => {
                 const videoTracks = state.currentStream.getVideoTracks();
                 if (videoTracks.length > 0) {
@@ -292,7 +256,7 @@
                                 mediaSource: "camera",
                                 // height: { max: 1280 },
                                 // width: { max: 720 },
-                                frameRate: { max: 60, ideal: 30},
+                                frameRate: { max: 60, ideal: 30 },
                                 facingMode: { ideal: "environment" }
                             }
                         });
@@ -341,11 +305,11 @@
 
                 if (user_sl_el.style.display === "block") {
                     user_sl_el.style.display = "none";
-                } 
+                }
 
                 if (user_cr_el.style.display === "block") {
                     user_cr_el.style.display = "none";
-                } 
+                }
 
             });
 
@@ -362,12 +326,12 @@
             function retrieve_data(route) {
                 const XHR = new XMLHttpRequest();
 
-                XHR.onreadystatechange = function() {
+                XHR.onreadystatechange = function () {
                     if (this.readyState == 4 && this.status == 200) {
                         const user_list = JSON.parse(this.responseText);
                         const total_users = user_list.length;
 
-                        for (var i=0; i<total_users; i++) {
+                        for (var i = 0; i < total_users; i++) {
                             let curr_user = user_list[i];
                             var new_row = table_usrs_el.insertRow(-1);
 
@@ -396,9 +360,7 @@
                 // The data sent is what the user provided in the form
                 // XHR.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
                 XHR.send();
-                // console.log(form_data);
             }
-            
 
             user_sl_btn_el.addEventListener('click', async () => {
                 retrieve_data("user_list")
@@ -409,6 +371,62 @@
                 }
                 user_sl_el.style.display = "block";
             });
+
+            // card selector behaviour
+            card_left_el.addEventListener('click', async () => {
+                // read card string, convert to JSON
+                var card_data = $("#card_selector").attr("cards");
+                var cd_decoded = JSON.parse(decodeURIComponent(card_data));
+
+                var card_status = $("#card_selector").attr("status");
+
+                // read current card ID
+                var curr_card_status = card_status.split("/");
+                var curr_card = parseInt(curr_card_status[0]) - 1;
+
+                console.log("curr card " + curr_card);
+
+                var total_cards = curr_card_status[1];
+
+                // set new card status
+                var new_card = curr_card - 1;
+
+                console.log("new card " + new_card);
+
+                if (new_card < total_cards || new_card > 0) {
+                    // change card content
+                    $("#marker_content").attr("value", cd_decoded[`${new_card}`].card_content);
+
+                    $("#card_selector").attr("status", `${new_card + 1}/${total_cards}`);
+                    $("#card_tracker").attr("value", `${new_card + 1}/${total_cards}`);
+                }
+            });
+
+            card_right_el.addEventListener('click', async () => {
+                // read card string, convert to JSON
+                var card_data = $("#card_selector").attr("cards");
+                var cd_decoded = JSON.parse(decodeURIComponent(card_data));
+
+                var card_status = $("#card_selector").attr("status");
+
+                // read current card ID
+                var curr_card_status = card_status.split("/");
+                var curr_card = parseInt(curr_card_status[0]) - 1;
+                var total_cards = curr_card_status[1];
+
+                // set new card status
+                var new_card = curr_card + 1;
+
+                if (new_card < total_cards) {
+                    // change card content
+                    $("#marker_content").attr("value", cd_decoded[`${new_card}`].card_content);
+
+                    $("#card_selector").attr("status", `${new_card + 1}/${total_cards}`);
+                    $("#card_tracker").attr("value", `${new_card + 1}/${total_cards}`);
+                }
+            });
+
+
 
             // });
 
@@ -433,23 +451,23 @@
             function send_data(form_data, route) {
                 const XHR = new XMLHttpRequest();
 
-                XHR.onreadystatechange = function() {
+                XHR.onreadystatechange = function () {
                     if (this.readyState == 4 && this.status == 200) {
                         // Behaviour if server was able to receive and insert user
                         // console.log(this.responseText);
                         if (user_cr_el.style.display === "block") {
                             user_cr_el.style.display = "none";
-                        } 
+                        }
 
                         if (status_box_el.style.display === "none") {
                             status_box_el.style.display = "block";
-                        } 
+                        }
 
-                        setTimeout(function() {
+                        setTimeout(function () {
                             $('#status_box').fadeOut('fast');
                         }, 5000); // <-- time in milliseconds
 
-                        
+
                     }
                 };
 
@@ -463,12 +481,12 @@
             }
 
             const form = document.getElementById("user_create_form");
-            form.addEventListener( "submit", async () => {
+            form.addEventListener("submit", async () => {
                 event.preventDefault();
                 var form_data = $("form").serializeArray();
                 var json_form_data = JSON.stringify(form_data);
                 send_data(json_form_data, "user_create");
-            } );
+            });
 
             scene.addEventListener('adapter-ready', ({ detail: adapter }) => {
                 // We don't use the syncOccupants API, set requestedOccupants to be the same array instance as availableOccupants
@@ -486,146 +504,180 @@
                     console.warn("Microphone access not allowed. This client will not broadcast audio.");
                 });
             });
+
+
         });
 
     </script>
 
-<script>
-    function retrieve_data(route) {
-        const XHR = new XMLHttpRequest();
+    <script>
+        function retrieve_data(route) {
+            const XHR = new XMLHttpRequest();
 
-        XHR.onreadystatechange = function() {
-            if (this.readyState == 4 && this.status == 200) {
-                const returned_data = JSON.parse(this.responseText);
-                const num_items = returned_data.length;
+            XHR.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    const returned_data = JSON.parse(this.responseText);
+                    const num_items = returned_data.length;
 
-                if (route == "marker_ids") {
-                    // create markers programatically from data returned from server
-                    const camera = document.querySelector('a-camera');
-                    const sceneEl = document.querySelector('a-scene');
+                    if (route == "markers") {
+                        // create markers programatically from data returned from server
+                        const camera = document.querySelector('a-camera');
+                        const sceneEl = document.querySelector('a-scene');
 
-                    for (var i=0; i<num_items; i++) {
-                        let curr_marker = returned_data[i];
-                        let cm_value = curr_marker.marker_value;
-                        let cm_id = curr_marker.marker_id;
-                        console.log(cm_value, cm_id);
+                        for (var i = 0; i < num_items; i++) {
+                            let curr_marker = returned_data[i];
+                            let cm_value = curr_marker.marker_value;
+                            let cm_id = curr_marker.marker_id;
+                            let cm_title = curr_marker.marker_title;
 
-                        // create marker to be recognised
-                        const newMarker = document.createElement("a-marker");
-                        newMarker.setAttribute("type", "barcode");
-                        newMarker.setAttribute("value", cm_value);
-                        newMarker.setAttribute("id", cm_id);
-                        newMarker.setAttribute("registerevents", "");
-                        sceneEl.appendChild(newMarker);
+                            let cm_cards = curr_marker.cards;
+                            var card_data_str = encodeURIComponent(JSON.stringify(cm_cards));
+
+                            // console.log(cm_value, cm_id);
+
+                            // create marker to be recognised and store all details there
+                            const newMarker = document.createElement("a-marker");
+                            newMarker.setAttribute("type", "barcode");
+                            newMarker.setAttribute("value", cm_value);
+                            newMarker.setAttribute("id", cm_id);
+                            newMarker.setAttribute("title", cm_title);
+                            newMarker.setAttribute("cards", card_data_str);
+
+                            newMarker.setAttribute("registerevents", "");
+
+                            sceneEl.appendChild(newMarker);
+                        }
+
+
                     }
-
                 }
-                // const user_list = JSON.parse(this.responseText);
-                // const total_users = user_list.length;
+            };
+            // Set up our request
+            XHR.open("GET", `https://192.168.1.101:8444/${route}/`);
 
-                // for (var i=0; i<total_users; i++) {
-                //     let curr_user = user_list[i];
-                //     var new_row = table_usrs_el.insertRow(-1);
+            // The data sent is what the user provided in the form
+            // XHR.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+            XHR.send();
+            // console.log(form_data);
+        }
 
-                //     var cell_fname = new_row.insertCell(0);
-                //     var cell_surname = new_row.insertCell(1);
-                //     var cell_button_select = new_row.insertCell(2);
+        document.addEventListener('DOMContentLoaded', () => {
+            // request from the database, the shortlist of IDs
+            retrieve_data("markers");
 
-                //     cell_fname.innerHTML = curr_user["first_name"];
-                //     cell_surname.innerHTML = curr_user["surname"];
-
-                //     cell_button_select.innerHTML = `<button class="user_select_button" onclick="change_user('${curr_user["id"]}')">Select</button>`;
-
-                //     cell_button_select.style = "text-align: right";
-                // }
-
-                // const table_sl_user = document.getElementById('user_selected');
-                // table_sl_user.addEventListener('click', async () => {
-                //     const selected_user = table_sl_user.dataset.user_id;
-                //     console.log(selected_user);
-                // });
-            }
-        };
-        // Set up our request
-        XHR.open("GET", `https://192.168.1.101:8444/${route}/`);
-
-        // The data sent is what the user provided in the form
-        // XHR.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-        XHR.send();
-        // console.log(form_data);
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        // request from the database, the shortlist of IDs
-        retrieve_data("marker_ids");
-
-        // document.body.appendChild(sceneEl);
-
-
-        // sceneEl.addEventListener("onefingermove", (event) => {
-        //     console.log("rotation")
-        // });
-
-    //   const arSystem = sceneEl.systems["mindar-image-system"];
-    //   const target0 = document.querySelector('#target0');
-
-    //   // arReady event triggered when ready
-    //   sceneEl.addEventListener("arReady", (event) => {
-    //     // console.log("MindAR is ready")
-    //   });
-    //   // arError event triggered when something went wrong. Mostly browser compatbility issue
-    //   sceneEl.addEventListener("arError", (event) => {
-    //     // console.log("MindAR failed to start")
-    //   });
-    //   // detect target found
-    //   target0.addEventListener("targetFound", event => {
-    //     var test = target0.getAttribute('position');
-
-    //     marker1Pos = new THREE.Vector3();
-    //     console.log(target0.object3D.getWorldPosition(marker1Pos));
-
-    //     NAF.connection.broadcastData('augmentationStatus', 'Marker x has entered the frame');
-
-    //     var clients = NAF.connection.getConnectedClients();
-    //     console.log(clients);
-    //   });
-    //   // detect target lost
-    //   target0.addEventListener("targetLost", event => {
-    //     console.log("target lost");
-    //   });
         });
-</script>
+    </script>
 
-<script>
-    // AFRAME.registerComponent('track-camera', {
-    //   tick: (function () {
-    //     const position = new THREE.Vector3();
-    //     const rotation = new THREE.Quaternion();
-    //     const euler = new THREE.Euler();
-    //     const matrix = new THREE.Matrix4();
-    //     return function () {
-    //       // local
-    //       // var position = this.el.getAttribute('position');
-    //       // var rotation = this.el.getAttribute('rotation');
-    //       // console.log("Position: " + position.x + " " + position.y + " " + position.z);
-    //       // console.log("Rotation: " + rotation.x + " " + rotation.y + " " + rotation.z);
-
-    //       this.el.object3D.updateMatrixWorld();
-    //       position.setFromMatrixPosition(this.el.object3D.matrixWorld); // Vector3
-    //       rotation.setFromRotationMatrix(matrix.extractRotation(this.el.object3D.matrixWorld ));
-          
-    //       console.log("Position: " + position.x + " " + position.y + " " + position.z);
-    //       console.log("Rotation: " + rotation.x + " " + rotation.y + " " + rotation.z);
-    //     }
-    //   })()
-    // });
-    AFRAME.registerComponent('registerevents', {
+    <script>
+        AFRAME.registerComponent('registerevents', {
             init: function () {
                 var marker = this.el;
-                marker.setAttribute('emitevents', 'true'); 
+                marker.setAttribute('emitevents', 'true');
                 marker.addEventListener('markerFound', function () {
                     var markerId = marker.id;
                     console.log('markerFound', markerId);
+
+                    // if marker found, create marker content and append to this element
+
+                    // create the marker content
+                    const marker_content = document.createElement("a-entity");
+                    marker_content.setAttribute("id", "markerContent");
+                    marker_content.setAttribute("scale", "4 2 4");
+                    marker_content.setAttribute("rotation", "-45 0 0");
+
+                    // set marker plane
+                    const marker_plane = document.createElement("a-plane");
+                    marker_plane.setAttribute("id", "markerPlane");
+                    marker_plane.setAttribute("material", "side: double; color: #303971; transparent: true; opacity: 0.75");
+                    marker_plane.setAttribute("height", "0.7");
+                    marker_plane.setAttribute("width", "1");
+                    marker_plane.setAttribute("depth", "0.01");
+
+                    // set title 
+                    const marker_title = document.createElement("a-text");
+                    marker_title.setAttribute("id", "markerTitle");
+                    marker_title.setAttribute("position", "-0.47 0.25 0.02");
+                    marker_title.setAttribute("scale", "0.5 0.5 0.5");
+                    marker_title.setAttribute("value", marker.title);
+
+                    // set content
+                    const marker_cards = document.createElement("a-text");
+                    marker_cards.setAttribute("id", "marker_content");
+                    marker_cards.setAttribute("position", "-0.46 0.13 0.02");
+                    marker_cards.setAttribute("scale", "0.15 0.15 0.15");
+                    marker_cards.setAttribute("wrap-count", "26");
+
+                    var cards_data = $(`#${markerId}`).attr("cards");
+                    var cd_decoded = JSON.parse(decodeURIComponent(cards_data));
+                    marker_cards.setAttribute("value", cd_decoded[0].card_content);
+
+                    // set the card tracker
+                    const card_tracker = document.createElement("a-text");
+                    card_tracker.setAttribute("id", "card_tracker");
+                    card_tracker.setAttribute("position", "0.4 -0.3 0.02");
+                    card_tracker.setAttribute("scale", "0.15 0.15 0.15");
+                    card_tracker.setAttribute("value", `1/${cd_decoded.length}`);
+
+                    // unhiding the card selector buttons
+                    $("#card_left_select").removeAttr("hidden");
+                    $("#card_right_select").removeAttr("hidden");
+
+                    // selecting the card data to a specific element
+                    $("#card_selector").attr("cards", cards_data);
+                    $("#card_selector").attr("status", `1/${cd_decoded.length}`);
+
+                    // // set left select arrow
+                    // const left_arrow_selector = document.createElement("a-circle");
+                    // left_arrow_selector.setAttribute("material", "side: double; color: #303971; transparent: true; opacity: 0.5");
+                    // left_arrow_selector.setAttribute("radius", "0.1");
+
+                    // const left_arrow_icon = document.createElement("a-image");
+                    // left_arrow_icon.setAttribute("src", "#chevron");
+                    // left_arrow_icon.setAttribute("material", "alphaTest: 0.5");
+                    // left_arrow_icon.setAttribute("width", "1");
+                    // left_arrow_icon.setAttribute("scale", "0.1 0.1 0.1");
+                    // left_arrow_icon.setAttribute("position", "0 0 0.02");
+                    // left_arrow_icon.setAttribute("rotation", "0 180 0");
+
+                    // left_arrow_selector.appendChild(left_arrow_icon);
+                    // left_arrow_selector.setAttribute("position", "-0.65 0 0");
+                    // left_arrow_selector.setAttribute("id", "view_marker_left_select");
+                    // // left_arrow_selector.setAttribute("gesture-handler", "");
+
+                    // // set left select arrow
+                    // const right_arrow_selector = document.createElement("a-circle");
+                    // right_arrow_selector.setAttribute("material", "side: double; color: #303971; transparent: true; opacity: 0.5");
+                    // right_arrow_selector.setAttribute("radius", "0.1");
+
+                    // const right_arrow_icon = document.createElement("a-image");
+                    // right_arrow_icon.setAttribute("src", "#chevron");
+                    // right_arrow_icon.setAttribute("material", "alphaTest: 0.5");
+                    // right_arrow_icon.setAttribute("width", "1");
+                    // right_arrow_icon.setAttribute("scale", "0.1 0.1 0.1");
+                    // right_arrow_icon.setAttribute("position", "0 0 0.02");
+                    // right_arrow_icon.setAttribute("rotation", "0 0 0");
+
+                    // right_arrow_selector.appendChild(right_arrow_icon);
+                    // right_arrow_selector.setAttribute("position", "0.65 0 0");
+                    // right_arrow_selector.setAttribute("id", "view_marker_right_select");
+
+                    // marker_content.appendChild(right_arrow_selector);
+                    // marker_content.appendChild(left_arrow_selector);
+                    marker_plane.appendChild(card_tracker);
+                    marker_plane.appendChild(marker_cards);
+                    marker_plane.appendChild(marker_title);
+                    marker_content.appendChild(marker_plane);
+                    marker.appendChild(marker_content);
+
+                    // $(`#${markerId}`).attr("raycaster", "objects: .clickable");
+                    // $(`#${markerId}`).attr("emitevents", "true");
+                    // $(`#${markerId}`).attr("cursor", "fuse: false; rayOrigin: mouse;");
+
+                    // $("#markerContent").attr("class", "clickable");
+                    $("#markerContent").attr("clickhandler", "");
+
+                    console.log(marker);
+
                     // $.ajax({
                     //     type: "POST",
                     //     url: "https://5gwebar.5gear.net:8080/",
@@ -661,15 +713,20 @@
 
                 marker.addEventListener('markerLost', function () {
                     var markerId = marker.id;
-                    console.log('markerLost', markerId); 
+                    console.log('markerLost', markerId);
                     // document.querySelector("#" + markerId + ' a-entity a-video').getAttribute('src')="";
-                    document.getElementById(markerId).innerHTML = ''; 
+                    document.getElementById(markerId).innerHTML = '';
+
+                    $("#card_left_select").attr("hidden", "");
+                    $("#card_right_select").attr("hidden", "");
                     // clearInterval(check);
-                  
+
                 });
             }
         });
-  </script>
+
+
+    </script>
 
     <script>
         // Define custom schema for syncing avatar color, set by random-color
@@ -685,18 +742,11 @@
                 }
             ]
         });
-        NAF.schemas.add({
-            template: '#marker-template',
-            components: [
-                'position',
-                'rotation',
-            ]
-        });
         // Called by Networked-Aframe when connected to server
         function onConnect() {
             console.log("onConnect", new Date());
         }
-        
+
     </script>
 </body>
 
