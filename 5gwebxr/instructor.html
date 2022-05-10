@@ -718,7 +718,7 @@
 
                 }
             };
-            XHR.open("POST", `https://192.168.1.101:8444/${route}/`);
+            XHR.open("POST", `https://5gwebxr.com:8444/${route}/`);
             XHR.setRequestHeader("Content-type", "application/json");
             XHR.send(JSON.stringify(data));
         }
@@ -890,7 +890,7 @@
         debug: false;
         adapter: janus;
         connectOnLoad: true;
-        serverURL: wss://192.168.1.101:8989/janus; ">
+        serverURL: wss://5gwebxr.com:8989/janus; ">
 
         <a-assets>
             <img id="card"
@@ -1409,7 +1409,7 @@
 
                 }
             };
-            XHR.open("GET", `https://192.168.1.101:8444/${route}/`);
+            XHR.open("GET", `https://5gwebxr.com:8444/${route}/`);
             XHR.send();
         }
 
