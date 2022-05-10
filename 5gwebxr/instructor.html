@@ -6,11 +6,13 @@
     <meta name="description" content="HoloLens Experience">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image.prod.js"></script>
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-aframe.prod.js"></script>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script
+        src="https://unpkg.com/aframe-environment-component@1.1.0/dist/aframe-environment-component.min.js"></script>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 
     <script src="https://unpkg.com/networked-aframe@^0.9.0/dist/networked-aframe.min.js"
         crossorigin="anonymous"></script>
@@ -23,7 +25,7 @@
     <script src="https://kit.fontawesome.com/83f0ae3239.js" crossorigin="anonymous"></script>
 
     <link rel="stylesheet" href="/assets/css/instructor.css" type="text/css" media="all" crossorigin="anonymous">
-    
+
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -31,181 +33,1044 @@
 
     <link rel="stylesheet" href="assets/css/main.css" />
     <script>
-        NAF.connection.subscribeToDataChannel('reliableBroadcast', function() {
-          var label = document.getElementById('reliable-broadcast');
-          label.innerHTML = 'success';
-          label.className = 'success';
+        NAF.connection.subscribeToDataChannel('reliableBroadcast', function () {
+            var label = document.getElementById('reliable-broadcast');
+            label.innerHTML = 'success';
+            label.className = 'success';
         });
-  
-        NAF.connection.subscribeToDataChannel('augmentationStatus', function(senderId, dataType, data, targetObj) {
-          var label = document.getElementById('unreliable-broadcast');
-          label.innerHTML = 'success';
-          label.className = 'success';
-          console.log(data);
+
+        NAF.connection.subscribeToDataChannel('augmentationStatus', function (senderId, dataType, data, targetObj) {
+            var label = document.getElementById('unreliable-broadcast');
+            label.innerHTML = 'success';
+            label.className = 'success';
+            console.log(data);
         });
-  
-        NAF.connection.subscribeToDataChannel('reliableSend', function() {
-          var label = document.getElementById('reliable-send');
-          label.innerHTML = 'success';
-          label.className = 'success';
+
+        NAF.connection.subscribeToDataChannel('reliableSend', function () {
+            var label = document.getElementById('reliable-send');
+            label.innerHTML = 'success';
+            label.className = 'success';
         });
-  
-        NAF.connection.subscribeToDataChannel('unreliableSend', function() {
-          var label = document.getElementById('unreliable-send');
-          label.innerHTML = 'success';
-          label.className = 'success';
+
+        NAF.connection.subscribeToDataChannel('unreliableSend', function () {
+            var label = document.getElementById('unreliable-send');
+            label.innerHTML = 'success';
+            label.className = 'success';
         });
-      </script>
+
+        function selected_marker(el_clicked_id) {
+            let selected_marker = el_clicked_id;
+            let selected_marker_id = document.getElementById(`${selected_marker}_text`).getAttribute("marker_id");
+            let selected_marker_value = document.getElementById(`${selected_marker}`).getAttribute("marker_val");
+
+            // get entire marker data from IndexedDB
+            var db_open_request = window.indexedDB.open('markers_db', 1);
+            db_open_request.onsuccess = function (event) {
+
+                // store the result of opening the database in the db variable.
+                db = db_open_request.result;
+                var transaction = db.transaction(["markers_os"], "readwrite");
+                var object_store = transaction.objectStore("markers_os");
+
+                var cur_val_index = object_store.index('marker_id')
+                $("#view_marker_plane").attr("marker_id", selected_marker_id);
+                var object_store_req = cur_val_index.get(selected_marker_id);
+
+                object_store_req.onsuccess = function (event) {
+                    // go through other markers in the list and re-enable their on-hover
+                    const markers = document.querySelectorAll(`a-plane[id^="select_marker"]`);
+
+                    for (var i = 0; i < markers.length; i++) {
+                        var curr_el = markers[i];
+                        // Don't reset colour if no marker is there 
+                        if (curr_el.hasAttribute("marker_val")) {
+                            $(`#${curr_el.id}`).attr("onhover", "disabled: false");
+                            $(`#${curr_el.id}`).attr("color", "#303971");
+                            $(`#${curr_el.id}`).attr("opacity", "0.5");
+                        }
+                    }
+
+                    // disable onhover to leave the current marker as selected
+                    $(`#${selected_marker}`).attr("onhover", "disabled: true");
+                    $(`#${selected_marker}`).attr("color", "#FF8C00");
+                    $(`#${selected_marker}`).attr("opacity", "0.5");
+
+                    // set the marker card viewer contents once pulled from DB
+                    var marker_contents = object_store_req.result;
+
+                    // set card title
+                    let vm_title = document.getElementById("view_marker_title");
+                    vm_title.setAttribute("value", marker_contents.marker_title);
+
+                    // set card contents
+                    let marker_card_content = marker_contents.cards;
+
+                    // set current card ID on the plane
+                    $("#view_marker_plane").attr("marker_curr_card_id", "1");
+
+                    // store card contents as an attribute of the background plane
+                    var card_data_str = encodeURIComponent(JSON.stringify(marker_card_content));
+                    $("#view_marker_plane").attr("marker_card_data", card_data_str);
+
+                    let first_card = marker_card_content[0];
+                    $("#view_marker_card_text").attr("value", first_card.card_content);
+
+                    // store marker_value also as an attribute of the plane
+                    $("#view_marker_plane").attr("marker_value", selected_marker_value);
+
+                    // set selectors to either be off or indicate what card number next/before
+                    let vm_left_marker = document.getElementById("view_marker_left_select");
+                    vm_left_marker.setAttribute("onhover", "disabled: true");
+                    vm_left_marker.setAttribute("color", "#d8d8d8");
+                    vm_left_marker.setAttribute("opacity", "0.5");
+                    vm_left_marker.setAttribute("select_card_id", "-1");
+
+                    let vm_right_marker = document.getElementById("view_marker_right_select");
+                    // check number of cards, if more than one, show next arrow button
+                    let cards_len = marker_card_content.length;
+                    let right_onhover = "disabled: true";
+                    let right_color = "#d8d8d8";
+                    let right_opacity = "0.5";
+                    if (cards_len > 1) {
+                        right_onhover = "disabled: false";
+                        right_color = "#303971";
+                        right_opacity = "0.7"
+                        vm_right_marker.setAttribute("select_card_id", "1");
+                    }
+                    vm_right_marker.setAttribute("onhover", right_onhover);
+                    vm_right_marker.setAttribute("color", right_color);
+                    vm_right_marker.setAttribute("opacity", right_opacity);
+
+                    // set the status of current card out of x
+                    $("#card_tracker").attr("value", `${1}/${cards_len}`);
+
+                    // set the marker image for the instructor to view 
+                    $("#view_mb_image").attr("src", `assets/barcodes/${marker_contents.marker_value}.png`);
+
+                    // turn on the edit card buttons for edit
+                    let edit_button = document.getElementById("editEditBtn");
+                    edit_button.setAttribute("onhover", "disabled: false");
+                    edit_button.setAttribute("color", "#303971");
+
+                    // turn on the edit add/subtract card buttons 
+                    let add_card_button = document.getElementById("editCardAdd");
+                    add_card_button.setAttribute("onhover", "disabled: false");
+                    add_card_button.setAttribute("color", "#303971");
+
+                    let subtract_card_button = document.getElementById("editCardSubtract");
+                    // if just one card, turn off delete card
+                    let subtract_hover = "disabled: false";
+                    let subtract_color = "#303971";
+                    if (cards_len == 1) {
+                        subtract_hover = "disabled: true";
+                        subtract_color = "#d8d8d8";
+                    }
+                    subtract_card_button.setAttribute("onhover", subtract_hover);
+                    subtract_card_button.setAttribute("color", subtract_color);
+
+                    // turn on remove marker button
+                    let remove_marker_button = document.getElementById("editMarkerSubtract");
+                    remove_marker_button.setAttribute("onhover", "disabled: false");
+                    remove_marker_button.setAttribute("color", "#303971");
+
+                };
+            };
+
+        }
+
+        function click_manager(el, el_clicked_id) {
+            // function to deal with whichever button is clicked
+            console.log(el_clicked_id);
+
+            // behaviour if a marker is selected to be visualised
+            let if_selecting_marker = el_clicked_id.includes("select_marker");
+            if (if_selecting_marker) {
+                selected_marker(el_clicked_id);
+            }
+
+            // behaviour if selecting previous/next buttons on card
+            const card_select_conditions = ["view_marker_", "_select"];
+            let card_arrow_select = card_select_conditions.every(el => el_clicked_id.includes(el));
+            card_selector: if (card_arrow_select) {
+                // pull the select_card_id attribute from the arrow 
+                let card_arrow_selected = document.getElementById(el_clicked_id).getAttribute("select_card_id");
+
+                // check if the arrow is disabled, i.e., onhover? 
+                let is_on_hover_disabled = $(`#${el_clicked_id}`).attr('onhover').disabled;
+
+                if (parseInt(card_arrow_selected) < 0 || is_on_hover_disabled) {
+                    // if first card or last card, don't do anything
+                    break card_selector;
+                }
+
+                // pull the data stored on the background plane of the card
+                var data_str = $("#view_marker_plane").attr("marker_card_data");
+                var card_data = JSON.parse(decodeURIComponent(data_str));
+
+                // load the correct card onto the plane text
+                var next_card = card_data[card_arrow_selected];
+                $("#view_marker_card_text").attr("value", next_card.card_content);
+
+                // set the new left and right arrows
+                let vm_left_marker = document.getElementById("view_marker_left_select");
+
+                let left_onhover = "disabled: false";
+                let left_color = "#303971";
+                let left_opacity = "0.7";
+
+                // check if going back one card would be the first card
+                if (parseInt(card_arrow_selected) - 1 < 0) {
+                    left_onhover = "disabled: true";
+                    left_color = "#d8d8d8";
+                    left_opacity = "0.5";
+                }
+
+                vm_left_marker.setAttribute("onhover", left_onhover);
+                vm_left_marker.setAttribute("color", left_color);
+                vm_left_marker.setAttribute("opacity", left_opacity);
+                vm_left_marker.setAttribute("select_card_id", parseInt(card_arrow_selected) - 1);
+
+                let vm_right_marker = document.getElementById("view_marker_right_select");
+                let right_onhover = "disabled: true";
+                let right_color = "#d8d8d8";
+                let right_opacity = "0.5";
+
+                // check number of cards, if more than the current new ID, show next arrow button
+                let cards_len = card_data.length;
+                let new_card_id = parseInt(card_arrow_selected) + 1;
+                if (cards_len - 1 > card_arrow_selected) {
+                    right_onhover = "disabled: false";
+                    right_color = "#303971";
+                    right_opacity = "0.7";
+                    vm_right_marker.setAttribute("select_card_id", new_card_id);
+                }
+                vm_right_marker.setAttribute("onhover", right_onhover);
+                vm_right_marker.setAttribute("color", right_color);
+                vm_right_marker.setAttribute("opacity", right_opacity);
+
+                // changing the current card number out of total on card_tracker
+                $("#card_tracker").attr("value", `${new_card_id}/${cards_len}`);
+
+                // store card ID on the plane 
+                $("#view_marker_plane").attr("marker_curr_card_id", new_card_id);
+            }
+
+            // behaviour if edit button is selected
+            edit_card: if (el_clicked_id == "editEditBtn") {
+                // check if the edit planes are already visible
+                let is_edit_card_plane = $("#edit_marker_card_text_plane").attr('visible');
+                if (is_edit_card_plane) {
+                    // if they are visible, hide them when edit button is pressed
+                    $("#edit_marker_title_plane").attr('visible', "false");
+                    $("#edit_marker_card_text_plane").attr('visible', "false");
+
+                    // hide the save button
+                    let save_button = document.getElementById("editSaveBtn");
+                    save_button.setAttribute("onhover", "disabled: true");
+                    save_button.setAttribute("color", "#d8d8d8");
+
+                    // re-enable onhover
+                    $("#view_marker_left_select").attr('visible', "true");
+                    $("#view_marker_right_select").attr('visible', "true");
+
+                    break edit_card;
+                }
+
+                // copy current card contents into a variable
+                let curr_card_title = $("#view_marker_title").attr('value');
+                let curr_card_text = $("#view_marker_card_text").attr('value');
+
+                // change edit planes text to the above
+                $("#edit_marker_title").attr('value', curr_card_title);
+                $("#edit_marker_card_text").attr('value', curr_card_text);
+
+                // show edit planes 
+                $("#edit_marker_title_plane").attr('visible', "true");
+                $("#edit_marker_card_text_plane").attr('visible', "true");
+
+                // disable left/right arrow selectors, or notify that you cannot move
+                // check state of either arrow 
+
+                // disable on-hover for both, but keep the same colour 
+                $("#view_marker_left_select").attr('visible', "false");
+                $("#view_marker_right_select").attr('visible', "false");
+
+                // change save button to be available 
+                let save_button = document.getElementById("editSaveBtn");
+                save_button.setAttribute("onhover", "disabled: false");
+                save_button.setAttribute("color", "#303971");
+            }
+
+            // if one of the edit_marker_* planes are selected 
+            let if_edit_card = el_clicked_id.includes("edit_marker");
+            if (if_edit_card) {
+                // get text of the plane 
+                let edit_text_field_name = el_clicked_id.slice(0, -6);
+                let edit_text = $(`#${edit_text_field_name}`).attr("value");
+
+                // add a plane behind the current plane
+                // get position, height, width of box
+                let curr_ep_position = $(`#${el_clicked_id}`).attr("position");
+                let curr_ep_height = $(`#${el_clicked_id}`).attr("height");
+                let curr_ep_width = $(`#${el_clicked_id}`).attr("width");
+
+                // create the plane, set attributes, append to current edit plane
+                const colour_plane = document.createElement("a-plane");
+                colour_plane.setAttribute("position", "0 0 -0.01");
+                colour_plane.setAttribute("height", `${parseFloat(curr_ep_height) + 0.02}`);
+                colour_plane.setAttribute("width", `${parseFloat(curr_ep_width) + 0.02}`);
+                colour_plane.setAttribute("color", "#1098f7");
+                colour_plane.setAttribute("opacity", "0.7");
+
+                const old_plane = document.getElementById(el_clicked_id);
+                old_plane.appendChild(colour_plane);
+
+                // disable onhover of itself 
+                $(`#${el_clicked_id}`).attr('onhover', "disabled: true");
+                $(`#${el_clicked_id}`).attr('color', "#ffffff");
+                $(`#${el_clicked_id}`).attr('opacity', "1.0");
+
+                // add a pipe to the end of the text string, if already one, don't add
+                if (edit_text.slice(-1) != "|") {
+                    // remove all previous instances of the pipe if they occur already
+                    edit_text = edit_text.replaceAll('|', '');
+                    let edit_text_new = edit_text + "|";
+                    $(`#${edit_text_field_name}`).attr("value", edit_text_new);
+                }
+
+                // set an attribute to show which field is being edited
+                $(`#${edit_text_field_name}`).attr("editing", "true");
+
+                // disable WASD controls if edit plane visible 
+                let is_visible = $("#edit_marker_card_text_plane").attr('visible');
+                if (is_visible) {
+                    document.querySelector('[camera]').removeAttribute('wasd-controls');
+                }
+            }
+
+            // behaviour if save button is selected
+            if (el_clicked_id == "editSaveBtn") {
+                // store title and card content into variables
+                let edited_title = $("#edit_marker_title").attr('value');
+                let edited_card = $("#edit_marker_card_text").attr('value');
+
+                edited_title = edited_title.replaceAll('|', '');
+                edited_card = edited_card.replaceAll('|', '');
+
+                // pull which card is being edited
+                let edited_card_id = parseInt($("#view_marker_plane").attr("marker_curr_card_id")) - 1;
+
+                // pull which marker to be updated, also use this if marker value is to be updated
+                var curr_marker_value = $("#view_marker_plane").attr("marker_value");
+                console.log("saving " + curr_marker_value);
+
+                // edit the original JSON stored in the card
+                var data_str = $("#view_marker_plane").attr("marker_card_data");
+                var card_data = JSON.parse(decodeURIComponent(data_str));
+                var curr_card = card_data[edited_card_id];
+
+                curr_card.card_content = edited_card;
+
+                var data_to_send = {};
+                data_to_send.marker_value = curr_marker_value;
+                data_to_send.new_marker_value = curr_marker_value;
+                data_to_send.marker_title = edited_title;
+                data_to_send.cards = card_data;
+
+                // edit the original card to reflect these changes
+                $("#view_marker_title").attr("value", edited_title);
+                $("#view_marker_card_text").attr("value", edited_card);
+
+                // turn on marker selectors again
+                $("#view_marker_left_select").attr('visible', "true");
+                $("#view_marker_right_select").attr('visible', "true");
+
+                // send the content to be updated in the database as a post request
+                update_data("marker_update", data_to_send);
+
+                // edit the plane stored data
+                var card_data_str = encodeURIComponent(JSON.stringify(card_data));
+                $("#view_marker_plane").attr("marker_card_data", card_data_str);
+
+                // update IndexedDB database
+                var db_open_request = window.indexedDB.open('markers_db', 1);
+                db_open_request.onsuccess = function (event) {
+                    // store the result of opening the database in the db variable.
+                    db = db_open_request.result;
+                    var transaction = db.transaction(["markers_os"], "readwrite");
+                    var object_store = transaction.objectStore("markers_os");
+
+                    var cur_val_index = object_store.index('marker_value')
+                    var object_store_req = cur_val_index.get(curr_marker_value);
+
+                    object_store_req.onsuccess = function () {
+                        var marker_contents = object_store_req.result;
+
+                        marker_contents.marker_value = curr_marker_value;
+                        marker_contents.marker_title = edited_title;
+                        marker_contents.cards = card_data;
+
+                        const update_request = object_store.put(marker_contents);
+                        update_request.onsuccess = () => {
+                        }
+                    }
+                }
+
+                // hide the edit cards
+                $("#edit_marker_title_plane").attr("visible", "false");
+                $("#edit_marker_card_text_plane").attr("visible", "false");
+
+                // "turn off" save button once complete 
+                let save_button = document.getElementById("editSaveBtn");
+                save_button.setAttribute("onhover", "disabled: true");
+                save_button.setAttribute("color", "#d8d8d8");
+            }
+
+            // if add/subtract card buttons are selected
+            add_remove_card: if (el_clicked_id.includes("editCard")) {
+                // taking card details from plane
+                var data_str = $("#view_marker_plane").attr("marker_card_data");
+                var card_data = JSON.parse(decodeURIComponent(data_str));
+
+                // check whether adding or removing a card
+                let card_what = el_clicked_id.replace("editCard", "");
+                let card_what_dict = {
+                    "Add": 1,
+                    "Subtract": -1
+                }
+                let cw_val = card_what_dict[card_what];
+
+                if (card_data.length == 1 && card_what == "Subtract") {
+                    break add_remove_card;
+                }
+
+                // check for current card ID which is zero-indexed
+                let curr_card_id = parseInt($("#view_marker_plane").attr("marker_curr_card_id")) - 1;
+
+                let card_in_question_id;
+                let marker_text;
+                if (card_what == "Add") {
+                    // take the current card ID and incremenent by 1 
+                    card_in_question_id = curr_card_id + 1;
+                    marker_text = ""
+                } else if (card_what == "Subtract") {
+                    // don't change current card if removing
+                    card_in_question_id = curr_card_id;
+
+                    // try and pull the details of the next card which will take the current ID, if does not exist, go to previous 
+                    marker_text = card_data[card_in_question_id + cw_val].card_content;
+                }
+
+                // change current card ID 
+                $("#view_marker_plane").attr("marker_curr_card_id", card_in_question_id + 1);
+
+                // change card data to be empty 
+                $("#view_marker_card_text").attr("value", marker_text);
+
+                if (card_what == "Subtract") {
+                    card_data = card_data.filter(function (json_obj) {
+                        return json_obj.card_id != card_in_question_id;
+                    });
+                }
+
+                for (var i in card_data) {
+                    let lcc_id = card_data[i].card_id;
+                    if (lcc_id > curr_card_id) {
+                        card_data[i].card_id = `${parseInt(lcc_id) + cw_val}`;
+                    }
+                }
+
+                if (card_what == "Add") {
+                    // add new empty card
+                    let new_card = {
+                        card_id: `${card_in_question_id}`,
+                        card_content: ""
+                    }
+                    card_data.push(new_card);
+                }
+
+                // sort by card_id
+                card_data.sort(function (a, b) { return a.card_id - b.card_id });
+
+                // store the changes in the card plane
+                var card_data_str = encodeURIComponent(JSON.stringify(card_data));
+                $("#view_marker_plane").attr("marker_card_data", card_data_str);
+
+                // change the status card to be new card/(old total+1)
+                $("#card_tracker").attr("value", `${card_in_question_id + cw_val}/${card_data.length}`);
+
+                // change left and right select arrows 
+                let vm_left_marker = document.getElementById("view_marker_left_select");
+
+                // if removing first card and there'll be one left
+                let left_onhover = "disabled: false";
+                let left_color = "#303971";
+                let left_opacity = "0.7";
+                if (card_data.length == 1) {
+                    left_onhover = "disabled: true";
+                    left_color = "#d8d8d8";
+                    left_opacity = "0.5";
+                }
+                vm_left_marker.setAttribute("onhover", left_onhover);
+                vm_left_marker.setAttribute("color", left_color);
+                vm_left_marker.setAttribute("opacity", left_opacity);
+                vm_left_marker.setAttribute("select_card_id", `${card_in_question_id - 1}`);
+
+                // if last card, turn off going right 
+                let right_onhover = "disabled: false";
+                let right_color = "#303971";
+                let right_opacity = "0.7";
+                if ((card_in_question_id + 1 - card_data.length) == 0) {
+                    right_onhover = "disabled: true";
+                    right_color = "#d8d8d8";
+                    right_opacity = "0.5";
+                }
+                let vm_right_marker = document.getElementById("view_marker_right_select");
+                vm_right_marker.setAttribute("onhover", right_onhover);
+                vm_right_marker.setAttribute("color", right_color);
+                vm_right_marker.setAttribute("opacity", right_opacity);
+                vm_right_marker.setAttribute("select_card_id", `${card_in_question_id + 1}`);
+
+                // find which marker to be updated
+                var curr_marker_value = $("#view_marker_plane").attr("marker_value");
+
+                // store the changes in local IndexedDB
+                var db_open_request = window.indexedDB.open('markers_db', 1);
+                db_open_request.onsuccess = function (event) {
+                    // store the result of opening the database in the db variable.
+                    db = db_open_request.result;
+                    var transaction = db.transaction(["markers_os"], "readwrite");
+                    var object_store = transaction.objectStore("markers_os");
+
+                    var cur_val_index = object_store.index('marker_value')
+                    var object_store_req = cur_val_index.get(curr_marker_value);
+
+                    object_store_req.onsuccess = function () {
+                        var marker_contents = object_store_req.result;
+                        marker_contents.marker_value = curr_marker_value;
+                        marker_contents.cards = card_data;
+                        const update_request = object_store.put(marker_contents);
+                    }
+                }
+
+                // push changes to database
+                var data_to_send = {};
+                data_to_send.marker_value = curr_marker_value;
+                data_to_send.new_marker_value = curr_marker_value;
+                data_to_send.marker_title = $("#view_marker_title").attr('value');
+                data_to_send.cards = card_data;
+                update_data("marker_update", data_to_send);
+            }
+
+            // if add/subtract marker buttons are selected
+            if (el_clicked_id.includes("editMarker")) {
+                // check if add or removing a marker
+                let card_what = el_clicked_id.replace("editMarker", "");
+
+                // if adding a marker
+                if (card_what == "Add") {
+                    // check which fiducial markers have been assigned by polling IndexedDB
+                    async function markers_val_search() {
+                        return new Promise(function (resolve, reject) {
+                            var db_open_request = window.indexedDB.open('markers_db', 1);
+                            db_open_request.onsuccess = function (event) {
+                                db = db_open_request.result;
+                                var transaction = db.transaction(["markers_os"], "readwrite");
+                                var object_store = transaction.objectStore("markers_os");
+
+                                // var cur_val_index = object_store.index('marker_value')
+                                var object_store_req = object_store.getAll();
+                                object_store_req.onsuccess = function (event) {
+                                    var marker_contents = object_store_req.result;
+                                    used_marker_values = marker_contents.map(function (el) { return parseInt(el.marker_value); });
+                                    resolve(used_marker_values)
+                                }
+                            }
+                        });
+                    }
+
+                    markers_val_search().then(function (result) {
+                        var used_marker_values = result;
+                        // if fiducial index has not been used, use that, alternatively, use largest integer+1
+                        // sort to be in numerical order
+                        used_marker_values.sort(function (a, b) { return a.marker_value - b.marker_value });
+                        var largest_used_marker_val = used_marker_values.at(-1);
+
+                        // if order is correct and there are no missing markers
+                        var missing_markers = new Array();
+                        for (var i = 1; i <= largest_used_marker_val; i++) {
+                            if (used_marker_values.indexOf(i) == -1) {
+                                missing_markers.push(i);
+                            }
+                        }
+
+                        // set details of the new marker
+                        var new_marker_val = largest_used_marker_val + 1;
+                        var new_marker = {
+                            marker_value: `${new_marker_val}`,
+                            marker_id: `${Math.random().toString(36).slice(2)}`,
+                            marker_title: `Marker ${new_marker_val + 1}`,
+                            cards: [
+                                {
+                                    card_id: "0",
+                                    card_content: "Edit to set marker content"
+                                }
+                            ]
+                        }
+
+                        // add marker to IndexedDB
+                        var dbor_add = window.indexedDB.open('markers_db', 1);
+                        dbor_add.onsuccess = function (event) {
+                            db = dbor_add.result;
+                            var transaction = db.transaction(["markers_os"], "readwrite");
+                            var object_store = transaction.objectStore("markers_os");
+
+                            const add_marker_req = object_store.add(new_marker);
+                        }
+
+                        // add marker to database
+                        update_data("marker_insert", new_marker);
+
+                        // reload list of markers, i.e., shuffle down 
+                        var db_open_request = window.indexedDB.open('markers_db', 1);
+                        db_open_request.onsuccess = function (event) {
+                            db = db_open_request.result;
+                            displayData(db, "new_marker", 0);
+                        }
+
+                    });
+                } else if (card_what == "Subtract") {
+                    // pull the selected marker_id from the marker
+                    var marker_to_delete_id = $("#view_marker_plane").attr("marker_id");
+
+                    // search IndexedDB and remove
+                    var db_open_request = window.indexedDB.open('markers_db', 1);
+                    db_open_request.onsuccess = function (event) {
+                        // store the result of opening the database in the db variable.
+                        db = db_open_request.result;
+                        var transaction = db.transaction(["markers_os"], "readwrite");
+                        var object_store = transaction.objectStore("markers_os");
+                        // var request = transaction.objectStore("markers_os").delete(marker_to_delete_id);
+
+                        var cur_val_index = object_store.index('marker_id')
+                        var object_store_req = cur_val_index.get(marker_to_delete_id);
+
+                        // console.log(marker_to_delete_id);
+
+                        object_store_req.onsuccess = function () {
+                            var marker_contents = object_store_req.result;
+                            object_store.delete(marker_contents.id);
+
+                            var marker_to_delete = {
+                                marker_id: marker_to_delete_id
+                            }
+
+                            // tell database to remove 
+                            update_data("marker_delete", marker_to_delete);
+
+                            // reload list of markers, i.e., shuffle down 
+                            var db_open_request = window.indexedDB.open('markers_db', 1);
+                            db_open_request.onsuccess = function (event) {
+                                db = db_open_request.result;
+                                displayData(db, "update_list", 0);
+                            }
+
+                            // find which marker in selector list was selected
+                            var marker_loc;
+                            for (var i = 1; i <= 5; i++) {
+                                var curr_el = $(`#select_marker${i}_text`).attr("marker_id");
+                                if (curr_el == marker_to_delete_id) {
+                                    marker_loc = i;
+                                }
+                            }
+                        }
+                    }
+
+                }
+            }
+
+            // if up and down buttons are selected on the markers list
+            if (el_clicked_id.includes("markers_select")) {
+                let marker_list_what = el_clicked_id.replace("markers_select_", "");
+                let mlw_dict = {
+                    down: 1,
+                    up: -1
+                }
+
+                console.log(mlw_dict[marker_list_what]);
+
+                // if up or down selected, move list either way by one
+                var db_open_request = window.indexedDB.open('markers_db', 1);
+                db_open_request.onsuccess = function (event) {
+                    db = db_open_request.result;
+                    displayData(db, "update_list", mlw_dict[marker_list_what]);
+                }
+
+            }
+        }
+
+        function update_data(route, data) {
+            const XHR = new XMLHttpRequest();
+            XHR.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    // const returned_data = JSON.parse(this.responseText);
+                    // const num_items = returned_data.length;
+
+                }
+            };
+            XHR.open("POST", `https://192.168.1.101:8444/${route}/`);
+            XHR.setRequestHeader("Content-type", "application/json");
+            XHR.send(JSON.stringify(data));
+        }
+
+        AFRAME.registerComponent('onhover', {
+            schema: {
+                disabled: { default: false },
+                color: { type: 'color', default: '#303971' },
+                opacity: { default: '0.7' }
+            },
+
+            init: function () {
+                var self = this;
+                this.eventHandlerFn = function () { console.log(self.data.message); };
+
+                var data = this.data;
+                var el = this.el;
+                var defaultColor = el.getAttribute('material').color;
+                var defaultOpacity = el.getAttribute('material').opacity;
+
+                el.addEventListener('click', function () {
+                    var el_clicked_id = el.id;
+                    // check if click is disabled on element
+                    click_manager(el, el_clicked_id);
+
+                });
+
+                el.addEventListener('mouseenter', function () {
+                    if (!data.disabled) {
+                        el.setAttribute('color', "#6b9cf0");
+                        el.setAttribute('opacity', 1);
+                    }
+                    // console.log("Selecting " + el.id);
+                });
+
+                el.addEventListener('mouseleave', function () {
+                    if (!data.disabled) {
+                        el.setAttribute('color', defaultColor);
+                        el.setAttribute('opacity', defaultOpacity);
+                    }
+                    // console.log("Not selecting " + el.id + " anymore");
+                });
+            },
+            update: function (old_data) {
+                var data = this.data;
+                var el = this.el;
+
+                var defaultColor = data.color;
+                var defaultOpacity = data.opacity;
+
+                if (Object.keys(old_data).length === 0) { return; }
+
+                if (old_data.color !== data.color) {
+                    el.removeEventListener('mouseenter', this.eventHandlerFn);
+                    el.removeEventListener('mouseleave', this.eventHandlerFn);
+                }
+
+                if (data.color) {
+                    el.addEventListener('mouseenter', function () {
+                        if (!data.disabled) {
+                            el.setAttribute('color', "#6b9cf0");
+                            el.setAttribute('opacity', 1);
+                        }
+                    });
+                    el.addEventListener('mouseleave', function () {
+                        if (!data.disabled) {
+                            el.setAttribute('color', defaultColor);
+                            el.setAttribute('opacity', defaultOpacity);
+                        }
+                    });
+                } else {
+                    // console.log(data.message);
+                }
+
+
+            }
+        });
+
+        document.addEventListener("keydown", function (event) {
+            //  find the field that is being edited
+            var editing_elements = Array.from(document.querySelectorAll("[id^='edit_']"));
+
+            // re-adding WASD controls if shift is pressed alongside WASD keys
+            const wasd = ["w", "a", "s", "d"];
+            if (wasd.includes((event.key).toLowerCase())) {
+                if (event.shiftKey) {
+                    document.querySelector('[camera]').setAttribute('wasd-controls', "enabled:true");
+                }
+            }
+
+            for (var i = 0; i < editing_elements.length; i++) {
+                var curr_el = editing_elements[i];
+                var is_editable = document.getElementById(curr_el.id).hasAttribute("editing");
+
+                if (is_editable) {
+                    // TO IMPLEMENT:
+                    // - BEHAVIOUR TO STOP BOX OVERFLOW! 
+                    // - COPY AND PASTING
+
+                    // if WASD-controls are on, don't allow for text editing 
+                    let camera_wasd = document.querySelector('[camera]').hasAttribute('wasd-controls');
+                    let total_characters = 9 * 35;
+                    if (!camera_wasd) {
+                        // get text from the text box
+                        let edit_text_field_name = curr_el.id;
+                        let edit_text = $(`#${edit_text_field_name}`).attr("value");
+
+                        // if keys are non-alphanumeric, don't print them - if the key string length is greater than 1, ignore
+                        if (!(event.key.length > 1)) {
+                            let curr_num_chars = parseInt(edit_text.length);
+
+                            // estimate the number of lines currently on
+                            let card_est_num_lines = Math.floor(curr_num_chars / 36);
+                            // console.log(curr_num_chars + " " + card_est_num_lines);
+
+                            // find number of characters, and if too many, stop entering more
+                            if (curr_num_chars < total_characters) {
+                                // convert the keystrokes into actual letters, and move cursor along
+                                edit_text = edit_text.replaceAll('|', '');
+                                edit_text = edit_text + event.key + '|';
+                                $(`#${edit_text_field_name}`).attr("value", edit_text);
+                            }
+                        }
+
+                        // backspace behaviour
+                        if (event.key == "Backspace") {
+                            edit_text = edit_text.slice(0, -2) + "|";
+                            $(`#${edit_text_field_name}`).attr("value", edit_text);
+                        }
+
+                        // enter behaviour
+                        if (event.key == "Enter") {
+                            // check if the card content or card title
+                            if (!edit_text_field_name.includes("title")) {
+                                // if total number of characters not met, allow enter
+                                if (parseInt(edit_text.length) < total_characters) {
+                                    // if 9th line, prevent further new lines
+                                    let card_num_lines = (edit_text.match(/\n/g) || []).length;
+
+                                    if (card_num_lines < 8) {
+                                        edit_text = edit_text.replaceAll('|', '');
+                                        edit_text = edit_text + "\n|";
+                                        $(`#${edit_text_field_name}`).attr("value", edit_text);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+            }
+
+            console.log(event.key);
+
+            // render letters on the new plane
+
+            // add ability to move that cursor and scan through the text            
+
+        });
+    </script>
 </head>
 
-<body class="is-preload homepage">
-    <div id="page-wrapper">
-        <div id="header-wrapper">
-            <header id="header" class="container">
+<body>
+    <a-scene
+        mindar-image="imageTargetSrc: https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.4/examples/image-tracking/assets/card-example/card.mind; uiScanning: no"
+        color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false"
+        device-orientation-permission-ui="enabled: false" networked-scene="
+        room: 1;
+        debug: false;
+        adapter: janus;
+        connectOnLoad: true;
+        serverURL: wss://192.168.1.101:8989/janus; ">
 
-                <!-- Logo -->
-                    <div id="logo">
-                        <h1>CoWebXR</h1>
-                    </div>
+        <a-assets>
+            <img id="card"
+                src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.4/examples/image-tracking/assets/card-example/card.png" />
+            <a-asset-item id="avatarModel"
+                src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.4/examples/image-tracking/assets/card-example/softmind/scene.gltf">
+            </a-asset-item>
 
-                <!-- Nav -->
-                    <nav id="nav">
-                        <ul>
-                            <li class="current"><a href="index.html">Welcome</a></li>
-                            <li>
-                                <a href="#">Dropdown</a>
-                                <ul>
-                                    <li><a href="#">Lorem ipsum dolor</a></li>
-                                    <li><a href="#">Magna phasellus</a></li>
-                                    <li>
-                                        <a href="#">Phasellus consequat</a>
-                                        <ul>
-                                            <li><a href="#">Lorem ipsum dolor</a></li>
-                                            <li><a href="#">Phasellus consequat</a></li>
-                                            <li><a href="#">Magna phasellus</a></li>
-                                            <li><a href="#">Etiam dolore nisl</a></li>
-                                        </ul>
-                                    </li>
-                                    <li><a href="#">Veroeros feugiat</a></li>
-                                </ul>
-                            </li>
-                            <li><a href="left-sidebar.html">Left Sidebar</a></li>
-                            <li><a href="right-sidebar.html">Right Sidebar</a></li>
-                            <li><a href="no-sidebar.html">No Sidebar</a></li>
-                        </ul>
-                    </nav>
+            <img id="iconChevron" src="assets/icons/arrow_white.png" />
+            <img id="iconEdit" src="assets/icons/edit.png" />
+            <img id="iconSave" src="assets/icons/save.png" />
+            <img id="iconAdd" src="assets/icons/add.png" />
+            <img id="iconSubtract" src="assets/icons/subtract.png" />
 
-            </header>
-        </div>
+            <template id="avatar-template" type="text/html">
+                <a-entity class="avatar" networked-audio-source>
+                    <a-plane id="avatarPlane" width="2" height="1.5" position="-1 8 -4" rotation="0 180 0"
+                        material="color: #ffffff; side: front; transparent: true" networked-video-source></a-plane>
+                </a-entity>
+            </template>
 
-        <div id="main-wrapper">
-            <div class="container">
-                <h2>Instructor</h2>
-                <div class="row gtr-200">
-                    <div class="col-4 col-12-medium">
-                        <!-- Sidebar -->
-                            <div id="sidebar">
-                                <section class="widget thumbnails">
-                                    <div><p>As the instructor, you have access to tools to control and edit the content that is available for the user to view.</p></div>
-                                    <h3>Controls</h3>
-                                    <div class="grid">
-                                        <div class="row gtr-50">
-                                            <div class="col-6">
-                                                <div class="actions">
-                                                    <button id="camera-btn" type="button" class="button">Show Camera to User</button>
-                                                    <!-- <button id="scene-btn" type="button" class="button">Start streaming scene</button> -->
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <p>Broadcast reliable test result: <span id="reliable-broadcast" class="fail">waiting</span></p>
-                                                <p>Broadcast unreliable  test result: <span id="unreliable-broadcast" class="fail">waiting</span></p>
-                                                <p>Send reliable test result: <span id="reliable-send" class="fail">waiting</span></p>
-                                                <p>Send unreliable test result: <span id="unreliable-send" class="fail">waiting</span></p>
-                                              </div>
-                                            <!-- <div class="col-6"><a href="#" class="image fit"><img src="images/pic04.jpg" alt="" /></a></div>
-                                            <div class="col-6"><a href="#" class="image fit"><img src="images/pic05.jpg" alt="" /></a></div>
-                                            <div class="col-6"><a href="#" class="image fit"><img src="images/pic06.jpg" alt="" /></a></div>
-                                            <div class="col-6"><a href="#" class="image fit"><img src="images/pic07.jpg" alt="" /></a></div> -->
-                                        </div>
-                                    </div>
-                                    <!-- <a href="#" class="button icon fa-file-alt">More</a> -->
-                                </section>
-                            </div>
+            <a-asset-item id="fabLabModel" src="assets/FabLabAll.glb"></a-asset-item>
 
-                    </div>
+            <img id="groundTexture" src="https://cdn.aframe.io/a-painter/images/floor.jpg">
 
-                    <div class="col-8 col-12-medium imp-medium">
-                        <div id="aframe_scene">
-                            <a-scene
-                            embedded
-                            mindar-image="imageTargetSrc: https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.4/examples/image-tracking/assets/card-example/card.mind; uiScanning: no"
-                            color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false"
-                            device-orientation-permission-ui="enabled: false" networked-scene="
-                            room: 1;
-                            debug: false;
-                            adapter: janus;
-                            connectOnLoad: true;
-                            serverURL: wss://192.168.1.101:8989/janus; ">
-                            <a-assets>
-                                <img id="card"
-                                    src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.4/examples/image-tracking/assets/card-example/card.png" />
-                                <a-asset-item id="avatarModel"
-                                    src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.4/examples/image-tracking/assets/card-example/softmind/scene.gltf">
-                                </a-asset-item>
+        </a-assets>
 
-                                <img id="chevron" src="/assets/arrow_white.png" />
+        <!-- Loading Fab Lab model and lights  -->
+        <a-entity gltf-model="#fabLabModel" position="0 0 0" scale="0.12 0.12 0.12"></a-entity>
+        <a-entity light="color: #ffffff; intensity: 1" position="2 1.8 0"></a-entity>
+        <a-entity light="color: #ffffff; intensity: 0.9" position="0.9 2.0 -6"></a-entity>
 
-                                <template id="avatar-template" type="text/html">
-                                    <a-entity class="avatar" networked-audio-source>
-                                    <a-plane id="avatarPlane" width="10" height="20" position="0 5 0" 
-                                    rotation="0 0 0" material="side: front; transparent: true" networked-video-source></a-plane>                  
-                                    </a-entity>
-                                </template>
+        <a-plane id="camera_back" material="side: double; color: #ffffff; transparent: true; opacity: 1.0" width="2"
+            height="1.5" position="-1 2 -4.99"></a-plane>
 
-                                <template id="content_template" type="text/html">
-                                    <a-entity position="0 0.3 0">
-                                        <a-plane id="data_item" material="side: double; color: #303971; transparent: true; opacity: 0.5" height="0.7" width="1" depth="0.01">
-                                            <a-text position="-0.47 0.25 0" scale="0.5 0.5 0.5" value="Computer"></a-text>
-                                            <a-text position="-0.46 0.13 0" wrap-count="26" scale="0.15 0.15 0.15" value="Use this computer to set the settings of the laser cutter."></a-text>
-                                        </a-plane>
-                            
-                                        <a-circle material="side: double; color: #303971; transparent: true; opacity: 0.5" position="-0.7 0 0" radius="0.1">
-                                            <a-image src="#chevron" material="alphaTest: 0.5" position="0 0 0.01" width="1" scale="0.1 0.1 0.1" rotation="0 180 0"></a-image>
-                                        </a-circle>
-                    
-                                        <a-circle material="side: double; color: #303971; transparent: true; opacity: 0.5" position="0.7 0 0" radius="0.1">
-                                            <a-image src="#chevron" material="alphaTest: 0.5" position="0 0 0.01" width="1" scale="0.1 0.1 0.1" rotation="0 0 0"></a-image>
-                                        </a-circle>
-                            
-                                        <a-plane material="side: double; color: #303971; transparent: true; opacity: 0" position="0 -0.5 0" height="0.2" width="1" depth="0.01">
-                                            <a-plane material="side: double; color: #303971; transparent: true; opacity: 0.5;" position="-0.39 0 0" height="0.2" width="0.2" depth="0.02"></a-plane>
-                                            <a-plane material="side: double; color: #303971; transparent: true; opacity: 0.5;" position="-0.13 0 0" height="0.2" width="0.2" depth="0.02"></a-plane>
-                                            <a-plane material="side: double; color: #303971; transparent: true; opacity: 0.5;" position="0.13 0 0" height="0.2" width="0.2" depth="0.02"></a-plane>
-                                            <a-plane material="side: double; color: #303971; transparent: true; opacity: 0.5;" position="0.39 0 0" height="0.2" width="0.2" depth="0.02"></a-plane>
-                                        </a-plane>
-                    
-                                    </a-entity>
-                                </template>
-                            </a-assets>
+        <a-camera look-controls="enabled: true" wasd-controls="enabled: true" position="0 1.6 0">
+            <a-entity cursor="fuse: false; fuseTimeout: 500; rayOrigin: mouse" position="0 0 -1">
+            </a-entity>
+            <a-entity id="player" networked="template:#avatar-template;attachTemplateToLocal:false" position="0 -5 -15"
+                rotation="0 0 0">
+            </a-entity>
+        </a-camera>
 
-                            <a-camera look-controls="enabled: true" wasd-controls="enabled: true" position="0 0 0" fit>
-                                <a-entity 
-                                    id="player" 
-                                    networked="template:#avatar-template;attachTemplateToLocal:false" 
-                                    position="0 -5 -15" rotation="0 0 0">
-                                </a-entity>
-                            </a-camera>
+        <a-entity position="0.8 1.7 -6" scale="1 1 1" rotation="0 200 0">
+            <!-- Marker Selector -->
+            <a-plane material="side: double; color: #303971; transparent: true; opacity: 0.7" position="-1.8 0.75 0"
+                height="0.2" width="1">
+                <a-text position="-0.47 0 0" scale="0.4 0.4 0.4" value="Markers"></a-text>
+            </a-plane>
 
-                            </a-scene>
-                        </div>
-                    </div>
+            <a-plane id="marker_selector" material="side: double; color: #303971; transparent: true; opacity: 0.7"
+                position="-1.8 0 0" height="1.2" width="1">
+                <!-- Markers are generated programatically -->
+            </a-plane>
+
+            <a-plane material="side: double; color: #303971; transparent: true; opacity: 0.7" position="-1.8 -0.7 0"
+                height="0.1" width="1">
+                <a-text id="viewing_markers" position="-0.47 0 0" scale="0.2 0.2 0.2"
+                    value="Viewing markers 1 to 5 out of #"></a-text>
+            </a-plane>
+
+            <!-- Add and delete markers -->
+            <a-plane id="editMarkerAdd" material="side: double; color: #303971; transparent: true; opacity: 0.5;"
+                position="-1.67 -0.9 0" height="0.2" width="0.2" depth="0.02" onhover="disabled: false">
+                <a-image src="#iconAdd" material="alphaTest: 0.5" position="-0.001 0 0.01" scale="0.1 0.1 0.1">
+                </a-image>
+            </a-plane>
+            <a-plane id="editMarkerSubtract" material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5;"
+                position="-1.41 -0.9 0" height="0.2" width="0.2" depth="0.02" onhover="disabled: true">
+                <a-image src="#iconSubtract" material="alphaTest: 0.5" position="-0.001 0 0.01" scale="0.1 0.1 0.1">
+                </a-image>
+            </a-plane>
+
+            <!-- Moving through the list of markers -->
+            <a-plane id="markers_select_up" material="side: double; color: #303971; transparent: true; opacity: 0.7;"
+                position="-1.15 0.12 0" height="0.2" width="0.2" depth="0.02" onhover>
+                <a-image src="#iconChevron" material="alphaTest: 0.5" position="0 0 0.01" width="1" scale="0.1 0.1 0.1"
+                    rotation="0 0 90"></a-image>
+            </a-plane>
+            <a-plane id="markers_select_down" material="side: double; color: #303971; transparent: true; opacity: 0.7;"
+                position="-1.15 -0.12 0" height="0.2" width="0.2" depth="0.02" onhover>
+                <a-image src="#iconChevron" material="alphaTest: 0.5" position="0 0 0.01" width="1" scale="0.1 0.1 0.1"
+                    rotation="0 0 -90"></a-image>
+            </a-plane>
+
+            <!-- Jump to user looking marker -->
+            <a-plane id="marker_jump_to_current"
+                material="side: double; color: #303971; transparent: true; opacity: 0.7" position="0 -0.75 0"
+                height="0.2" onhover>
+                <a-text position="-0.47 0 0" scale="0.25 0.25 0.25" value="Jump to marker user is viewing"></a-text>
+            </a-plane>
+
+            <!-- Marker Viewer -->
+            <a-plane id="view_marker_plane" material="side: double; color: #303971; transparent: true; opacity: 0.7"
+                height="0.7" width="1" depth="0.01">
+                <a-text id="view_marker_title" position="-0.47 0.25 0" scale="0.5 0.5 0.5" value="Card title"></a-text>
+                <a-text id="view_marker_card_text" position="-0.46 0.13 0" wrap-count="26" scale="0.15 0.15 0.15"
+                    value="Card content"></a-text>
+                <a-entity textarea></a-entity>
+
+                <a-text id="card_tracker" position="0.4 -0.3 0" scale="0.15 0.15 0.15" value="-/-"></a-text>
+
+                <!-- Edit planes -->
+                <a-plane id="edit_marker_title_plane" color="#ffffff" position="0 0.25 0.02" height="0.13" width="0.95"
+                    onhover visible="false">
+                    <a-text id="edit_marker_title" color="#000000" position="-0.47 0 0" scale="0.45 0.45 0.45"
+                        value="Card title"></a-text>
+                </a-plane>
+                <a-plane id="edit_marker_card_text_plane" color="#ffffff" position="0 -0.08 0.02" height="0.48"
+                    width="0.95" onhover visible="false">
+                    <a-text id="edit_marker_card_text" anchor="left" baseline="top" color="#000000"
+                        position="-0.44 0.20 0" scale="0.17 0.17 0.17" wrap-count="35" value="Card content"></a-text>
+                </a-plane>
+            </a-plane>
+
+            <!-- Which barcode -->
+            <a-plane id="view_marker_barcode" material="side: double; color: #303971; transparent: true; opacity: 0.7"
+                position="0 0.55 0" height="0.3" width="1" depth="0.01">
+                <a-text id="view_mb_title" position="-0.47 -0.05 0" wrap-count="10" scale="0.08 0.08 0.08" shader="msdf"
+                    font="https://raw.githubusercontent.com/etiennepinchon/aframe-fonts/master/fonts/roboto/Roboto-Italic.json"
+                    value="Associated marker"></a-text>
+                <a-image id="view_mb_image" src="assets/barcodes/empty_barcode.png" scale="0.25 0.25 0.25"
+                    position="0.32 0 0.01"></a-image>
+            </a-plane>
+
+            <!-- Arrow selection left/right -->
+            <a-circle id="view_marker_left_select"
+                material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5" position="-0.7 0 0"
+                radius="0.1" onhover="disabled: true">
+                <a-image src="#iconChevron" material="alphaTest: 0.5" position="0 0 0.01" width="1" scale="0.1 0.1 0.1"
+                    rotation="0 180 0"></a-image>
+            </a-circle>
+
+            <a-circle id="view_marker_right_select"
+                material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5" position="0.7 0 0" radius="0.1"
+                onhover="disabled: true">
+                <a-image src="#iconChevron" material="alphaTest: 0.5" position="0 0 0.01" width="1" scale="0.1 0.1 0.1"
+                    rotation="0 0 0"></a-image>
+            </a-circle>
+
+            <!-- Edit buttons -->
+            <a-plane id="editEditBtn" material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5;"
+                position="-0.39 -0.5 0" height="0.2" width="0.2" depth="0.02" onhover="disabled: true">
+                <a-image src="#iconEdit" material="alphaTest: 0.5" position="0.001 0.001 0.01" scale="0.1 0.1 0.1">
+                </a-image>
+            </a-plane>
+            <a-plane id="editSaveBtn" material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5;"
+                position="-0.13 -0.5 0" height="0.2" width="0.2" depth="0.02" onhover="disabled: true">
+                <a-image src="#iconSave" material="alphaTest: 0.5" position="0 0.001 0.01" scale="0.1 0.1 0.1">
+                </a-image>
+            </a-plane>
+            <a-plane id="editCardAdd" material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5;"
+                position="0.13 -0.5 0" height="0.2" width="0.2" depth="0.02" onhover="disabled: true">
+                <a-image src="#iconAdd" material="alphaTest: 0.5" position="-0.001 0 0.01" scale="0.1 0.1 0.1">
+                </a-image>
+            </a-plane>
+            <a-plane id="editCardSubtract" material="side: double; color: #d8d8d8; transparent: true; opacity: 0.5;"
+                position="0.39 -0.5 0" height="0.2" width="0.2" depth="0.02" onhover="disabled: true">
+                <a-image src="#iconSubtract" material="alphaTest: 0.5" position="-0.001 0 0.01" scale="0.1 0.1 0.1">
+                </a-image>
+            </a-plane>
+
+        </a-entity>
+
+        <a-entity environment="preset: default; groundColor: #445; grid: cross"></a-entity>
+        <a-plane src="#groundTexture" rotation="-90 0 0" position="0 -0.1 0" width="100" height="100"></a-plane>
+    </a-scene>
 
 
-    
-                </div>
+    <div class="actions" id="control_buttons">
+        <button id="camera-btn" type="button" class="button">Show Camera to User</button>
+        <!-- <button id="scene-btn" type="button" class="button">Start streaming scene</button> -->
+    </div>
+    <div>
+        <p>Broadcast reliable test result: <span id="reliable-broadcast" class="fail">waiting</span></p>
+        <p>Broadcast unreliable test result: <span id="unreliable-broadcast" class="fail">waiting</span></p>
+        <p>Send reliable test result: <span id="reliable-send" class="fail">waiting</span></p>
+        <p>Send unreliable test result: <span id="unreliable-send" class="fail">waiting</span></p>
+    </div>
 
-            </div>
-        </div>
 
     <style>
         .actions {
@@ -312,7 +1177,7 @@
                                 mediaSource: "camera",
                                 // height: { max: 1280 },
                                 // width: { max: 720 },
-                                frameRate: { max: 60, ideal: 30},
+                                frameRate: { max: 60, ideal: 30 },
                                 facingMode: { ideal: "environment" }
                             }
                         });
@@ -345,6 +1210,250 @@
     </script>
 
     <script>
+        function displayData(db, type, amount) {
+            // Open our object store and then get a cursor - which iterates through all the
+            // different data items in the store
+            const objectStore = db.transaction('markers_os').objectStore('markers_os');
+            var marker_val_index = objectStore.index('marker_value');
+            var cursor_count = 1;
+            var select_marker_count = 0;
+            objectStore.openCursor().addEventListener('success', e => {
+                // Get a reference to the cursor
+                const cursor = e.target.result;
+                // If there is still another data item to iterate through, keep running this code
+                if (cursor) {
+                    var count_request = marker_val_index.count();
+                    count_request.onsuccess = function () {
+                        var total_markers = count_request.result;
+                        marker_show: if (cursor_count <= total_markers) {
+                            if (type == "new_marker" && cursor_count < (total_markers - 4) || type == "default" && cursor_count > 5 ) {
+                                // if new marker added, do not update markers list until total_markers-5 cycled through 
+                                break marker_show;
+                            }
+
+                            if (type == "new_marker" && cursor_count == (total_markers - 4)) {
+                                select_marker_count = 0;
+                            }
+
+                            if (type == "update_list" && amount == 0) {
+                                // behaviour if total_markers less than number 5
+                                if (total_markers < 6) {
+                                    // loop and set the markers as default not available
+                                    for (var i = 1; i < 6; i++) {
+                                        if (i > total_markers) {
+                                            console.log(i + " " + total_markers);
+                                            var marker_to_change_text = document.getElementById(`select_marker${i}_text`);
+                                            marker_to_change_text.setAttribute("value", "No marker available");
+
+                                            var marker_to_change = document.getElementById(`select_marker${i}`);
+                                            marker_to_change.setAttribute("onhover", "disabled: true");
+                                            marker_to_change.setAttribute("material", "side: double; color: #d8d8d8; transparent: true; opacity: 0.5");
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (type == "update_list" && amount != 0) {
+                                // find current first and last markers
+                                var first_marker_idb_id = $("#select_marker1_text").attr("idb_id");
+                                var fifth_marker_idb_id = $("#select_marker5_text").attr("idb_id");
+
+                                var new_start_id = parseInt(first_marker_idb_id) + amount;
+                                if ((new_start_id-cursor_count)>0) {
+                                    // avoid rendering first marker
+                                    select_marker_count = -1;
+                                    break marker_show;
+                                }
+
+                                // don't do anything if last marker is greater than total number of markers
+                                if (fifth_marker_idb_id == (total_markers-1)) {
+                                    // disable down selector
+                                }
+
+                            }
+
+                            console.log(cursor.value.marker_id + " " + (select_marker_count+1) + " " + cursor.value.marker_title + " " + cursor_count);
+
+                            // Setting title text of the marker to text field
+                            const marker_el_text = document.getElementById(`select_marker${select_marker_count + 1}_text`);
+                            marker_el_text.setAttribute("value", `#${cursor_count}: ${cursor.value.marker_title}`);
+                            marker_el_text.setAttribute("idb_id", `${cursor.value.id}`);
+                            marker_el_text.setAttribute("marker_id", `${cursor.value.marker_id}`);
+
+                            // Set marker ID value for AR.js to the parent a-plane entity of the marker title
+                            const marker_el = document.getElementById(`select_marker${select_marker_count + 1}`);
+                            marker_el.setAttribute("marker_val", `${cursor.value.marker_value}`);
+                            marker_el.setAttribute("color", "#303971")
+                            marker_el.setAttribute("onhover", "disabled: false");
+
+                            if (cursor_count == total_markers && type == "new_marker") {
+                                // change active selected marker on the list to the new marker (it will always be last one)
+                                selected_marker("select_marker5");
+                            }
+                        }
+                        cursor_count++;
+                        select_marker_count++;
+                    }
+                    // Iterate to the next item in the cursor
+                    cursor.continue();
+                }
+
+                const view_markers = document.getElementById(`viewing_markers`);
+                view_markers.setAttribute("value", `Viewing markers 1 to ${cursor_count - 1} out of ${cursor_count - 1}`);
+            });
+        }
+
+        function addData(db, data) {
+            // prevent default - we don't want the form to submit in the conventional way
+            // open a read/write db transaction, ready for adding the data
+            const transaction = db.transaction(['markers_os'], 'readwrite');
+
+            for (var i = 0; i < data.length; i++) {
+                const curr_data = data[i];
+                // grab the values entered into the form fields and store them in an object ready for being inserted into the DB
+                const newItem = { marker_id: curr_data.marker_id, marker_title: curr_data.marker_title, marker_value: curr_data.marker_value, cards: curr_data.cards };
+
+                // call an object store that's already been added to the database
+                const objectStore = transaction.objectStore('markers_os');
+
+                // Make a request to add our newItem object to the object store
+                const addRequest = objectStore.add(newItem);
+            }
+
+            // Report on the success of the transaction completing, when everything is done
+            transaction.addEventListener('complete', () => {
+                // console.log('Transaction completed: database modification finished.');
+
+                // update the display of data to show the newly added item, by running displayData() again.
+                displayData(db, "default", 0);
+            });
+
+            transaction.addEventListener('error', () => console.log('Transaction not opened due to error'));
+
+        }
+
+        function retrieve_data(route) {
+            const XHR = new XMLHttpRequest();
+
+            var req = indexedDB.deleteDatabase("markers_db");
+            req.onsuccess = function () {
+                console.log("Deleted database successfully");
+            };
+            req.onerror = function () {
+                console.log("Couldn't delete database");
+            };
+            req.onblocked = function () {
+                console.log("Couldn't delete database due to the operation being blocked");
+            };
+
+            XHR.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    const returned_data = JSON.parse(this.responseText);
+                    const num_items = returned_data.length;
+
+                    let db;
+                    const openRequest = window.indexedDB.open('markers_db', 1);
+                    openRequest.addEventListener('error', () => console.error('Database failed to open'));
+                    openRequest.addEventListener('success', () => {
+                        // Store the opened database object in the db variable. This is used a lot below
+                        db = openRequest.result;
+
+                        // adding the data returned from the server to IDB and render first five markers
+                        addData(db, returned_data);
+                    });
+
+                    openRequest.addEventListener('upgradeneeded', e => {
+                        // Grab a reference to the opened database
+                        db = e.target.result;
+
+                        // Create an objectStore to store our notes in (basically like a single table)
+                        // including a auto-incrementing key
+                        const objectStore = db.createObjectStore('markers_os', { keyPath: 'id', autoIncrement: true });
+
+                        // Define what data items the objectStore will contain
+                        objectStore.createIndex('cards', 'cards', { unique: false });
+                        objectStore.createIndex('marker_id', 'marker_id', { unique: false });
+                        objectStore.createIndex('marker_title', 'marker_title', { unique: false });
+                        objectStore.createIndex('marker_value', 'marker_value', { unique: false });
+                    });
+
+                    // console.log(returned_data);
+
+                    // store marker data in local IndexedDB
+                    // var idb = importIDB("markers_db", "markers_os", returned_data); 
+                    // displayData(idb);
+
+                    // if (route == "markers") {
+                    //     // create markers programatically from data returned from server
+                    //     const camera = document.querySelector('a-camera');
+                    //     const sceneEl = document.querySelector('a-scene');
+
+                    //     for (var i=0; i<num_items; i++) {
+                    //         let curr_marker = returned_data[i];
+                    //         console.log(curr_marker);
+                    //         let cm_value = curr_marker.marker_value;
+                    //         let cm_id = curr_marker.marker_id;
+                    //         let cm_title = curr_marker.marker_title;
+                    //         // console.log(cm_value, cm_id);
+
+                    //         // // create marker to be recognised
+                    //         // const newMarker = document.createElement("a-marker");
+                    //         // newMarker.setAttribute("type", "barcode");
+                    //         // newMarker.setAttribute("value", cm_value);
+                    //         // newMarker.setAttribute("id", cm_id);
+                    //         // newMarker.setAttribute("registerevents", "");
+                    //         // sceneEl.appendChild(newMarker);
+                    //     }
+
+                    // }
+
+                }
+            };
+            XHR.open("GET", `https://192.168.1.101:8444/${route}/`);
+            XHR.send();
+        }
+
+        function fill_select_list() {
+            // find the marker_selector item
+            const marker_selector_el = document.getElementById("marker_selector");
+
+            // loop through enumerated five and create the markers
+            let marker_y_dist = 0.48; // starting y_dist for first marker
+            for (var i = 0; i < 5; i++) {
+                const new_marker_to_select = document.createElement("a-plane");
+                new_marker_to_select.setAttribute("id", `select_marker${i + 1}`);
+                new_marker_to_select.setAttribute("material", "side: double; color: #d8d8d8; transparent: true; opacity: 0.5");
+                new_marker_to_select.setAttribute("position", `0 ${marker_y_dist} 0.01`);
+                new_marker_to_select.setAttribute("height", "0.24");
+                new_marker_to_select.setAttribute("width", "1");
+                new_marker_to_select.setAttribute("onhover", "disabled: true");
+
+                // text inside the marker selector
+                const nmts_text = document.createElement("a-text");
+                nmts_text.setAttribute("id", `select_marker${i + 1}_text`);
+                nmts_text.setAttribute("position", "-0.45 -0.05 0");
+                nmts_text.setAttribute("scale", "0.3 0.3 0.3");
+                nmts_text.setAttribute("shader", "msdf");
+                nmts_text.setAttribute("font", "https://raw.githubusercontent.com/etiennepinchon/aframe-fonts/master/fonts/roboto/Roboto-Italic.json");
+                nmts_text.setAttribute("value", "No marker available");
+
+                new_marker_to_select.appendChild(nmts_text);
+                marker_selector_el.appendChild(new_marker_to_select);
+
+                marker_y_dist -= 0.24;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // create the select_markers progrmatically 
+            fill_select_list();
+
+            // request from the database, and fill the marker placeholders
+            retrieve_data("markers");
+        });
+    </script>
+
+    <script>
         // Define custom schema for syncing avatar color, set by random-color
         NAF.schemas.add({
             template: '#avatar-template',
@@ -363,10 +1472,10 @@
             console.log("onConnect", new Date());
         }
     </script>
-    
+
     <script>
         AFRAME.registerComponent("fit", {
-            init: function() {
+            init: function () {
                 const plane = document.querySelector("#avatarPlane");
                 const distance = this.el.object3D.position.distanceTo(plane.object3D.position);
                 const height = plane.getAttribute("geometry").height;
@@ -374,7 +1483,6 @@
                 const newDistance = Math.abs((height / 2) / Math.tan(fov / 2));
                 this.el.sceneEl.camera.zoom = distance / newDistance;
             }
-        })
+        });
     </script>
 </body>
-
