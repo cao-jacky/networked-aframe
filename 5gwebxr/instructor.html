@@ -26,7 +26,6 @@
 
     <link rel="stylesheet" href="/assets/css/instructor.css" type="text/css" media="all" crossorigin="anonymous">
 
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bree+Serif&display=swap" rel="stylesheet">
@@ -58,6 +57,41 @@
             label.className = 'success';
         });
 
+        function marker_enabler(el_id, status, other_attr) {
+            // find marker using element ID
+            var marker = $(`#${el_id}`);
+
+            // parameters
+            var parameters = {
+                enabled: {
+                    onhover: "disabled: false",
+                    color: "#303971",
+                    opacity: "0.7"
+                },
+                disabled: {
+                    onhover: "disabled: true",
+                    color: "#d8d8d8",
+                    opacity: "0.5"
+                }
+            }
+
+            const parameters_keys = Object.keys(parameters[status]);
+            parameters_keys.forEach((key, index) => {
+                marker.attr(`${key}`, `${(parameters[status])[key]}`);
+            });
+
+            if (other_attr) {
+                var oa_split = other_attr.split(";");
+                oa_split.forEach((el, ind, array) => {
+                    var prop_string = el.split(":");
+                    var prop_key = prop_string[0].replace(" ", "");
+                    var prop_value = prop_string[1].replace(" ", "");
+
+                    marker.attr(`${prop_key}`, `${prop_value}`);
+                });
+            }
+        }
+
         function selected_marker(el_clicked_id) {
             let selected_marker = el_clicked_id;
             let selected_marker_id = document.getElementById(`${selected_marker}_text`).getAttribute("marker_id");
@@ -84,16 +118,15 @@
                         var curr_el = markers[i];
                         // Don't reset colour if no marker is there 
                         if (curr_el.hasAttribute("marker_val")) {
-                            $(`#${curr_el.id}`).attr("onhover", "disabled: false");
-                            $(`#${curr_el.id}`).attr("color", "#303971");
-                            $(`#${curr_el.id}`).attr("opacity", "0.5");
+                            marker_enabler(curr_el.id, "enabled", "");
                         }
                     }
 
                     // disable onhover to leave the current marker as selected
-                    $(`#${selected_marker}`).attr("onhover", "disabled: true");
-                    $(`#${selected_marker}`).attr("color", "#FF8C00");
-                    $(`#${selected_marker}`).attr("opacity", "0.5");
+                    marker_enabler(selected_marker, "disabled", "color: #FF8C00");
+
+                    // append which marker was selected onto the card plane
+                    $(`#view_marker_plane`).attr("selected_marker", selected_marker);
 
                     // set the marker card viewer contents once pulled from DB
                     var marker_contents = object_store_req.result;
@@ -119,27 +152,16 @@
                     $("#view_marker_plane").attr("marker_value", selected_marker_value);
 
                     // set selectors to either be off or indicate what card number next/before
-                    let vm_left_marker = document.getElementById("view_marker_left_select");
-                    vm_left_marker.setAttribute("onhover", "disabled: true");
-                    vm_left_marker.setAttribute("color", "#d8d8d8");
-                    vm_left_marker.setAttribute("opacity", "0.5");
-                    vm_left_marker.setAttribute("select_card_id", "-1");
+                    marker_enabler("view_marker_left_select", "disabled", "select_card_id: -1");
 
                     let vm_right_marker = document.getElementById("view_marker_right_select");
                     // check number of cards, if more than one, show next arrow button
                     let cards_len = marker_card_content.length;
-                    let right_onhover = "disabled: true";
-                    let right_color = "#d8d8d8";
-                    let right_opacity = "0.5";
                     if (cards_len > 1) {
-                        right_onhover = "disabled: false";
-                        right_color = "#303971";
-                        right_opacity = "0.7"
-                        vm_right_marker.setAttribute("select_card_id", "1");
+                        marker_enabler("view_marker_right_select", "enabled", "select_card_id: 1");
+                    } else {
+                        marker_enabler("view_marker_right_select", "disabled", "select_card_id: 1");
                     }
-                    vm_right_marker.setAttribute("onhover", right_onhover);
-                    vm_right_marker.setAttribute("color", right_color);
-                    vm_right_marker.setAttribute("opacity", right_opacity);
 
                     // set the status of current card out of x
                     $("#card_tracker").attr("value", `${1}/${cards_len}`);
@@ -148,31 +170,20 @@
                     $("#view_mb_image").attr("src", `assets/barcodes/${marker_contents.marker_value}.png`);
 
                     // turn on the edit card buttons for edit
-                    let edit_button = document.getElementById("editEditBtn");
-                    edit_button.setAttribute("onhover", "disabled: false");
-                    edit_button.setAttribute("color", "#303971");
+                    marker_enabler("editEditBtn", "enabled", "");
 
                     // turn on the edit add/subtract card buttons 
-                    let add_card_button = document.getElementById("editCardAdd");
-                    add_card_button.setAttribute("onhover", "disabled: false");
-                    add_card_button.setAttribute("color", "#303971");
+                    marker_enabler("editCardAdd", "enabled", "");
 
-                    let subtract_card_button = document.getElementById("editCardSubtract");
                     // if just one card, turn off delete card
-                    let subtract_hover = "disabled: false";
-                    let subtract_color = "#303971";
                     if (cards_len == 1) {
-                        subtract_hover = "disabled: true";
-                        subtract_color = "#d8d8d8";
+                        marker_enabler("editCardSubtract", "disabled", "");
+                    } else {
+                        marker_enabler("editCardSubtract", "enabled", "");
                     }
-                    subtract_card_button.setAttribute("onhover", subtract_hover);
-                    subtract_card_button.setAttribute("color", subtract_color);
 
                     // turn on remove marker button
-                    let remove_marker_button = document.getElementById("editMarkerSubtract");
-                    remove_marker_button.setAttribute("onhover", "disabled: false");
-                    remove_marker_button.setAttribute("color", "#303971");
-
+                    marker_enabler("editMarkerSubtract", "enabled", "");
                 };
             };
 
@@ -212,41 +223,22 @@
                 $("#view_marker_card_text").attr("value", next_card.card_content);
 
                 // set the new left and right arrows
-                let vm_left_marker = document.getElementById("view_marker_left_select");
-
-                let left_onhover = "disabled: false";
-                let left_color = "#303971";
-                let left_opacity = "0.7";
-
                 // check if going back one card would be the first card
+                let prev_card_id = parseInt(card_arrow_selected) - 1;
                 if (parseInt(card_arrow_selected) - 1 < 0) {
-                    left_onhover = "disabled: true";
-                    left_color = "#d8d8d8";
-                    left_opacity = "0.5";
+                    marker_enabler("view_marker_left_select", "disabled", `select_card_id: ${prev_card_id}`);
+                } else {
+                    marker_enabler("view_marker_left_select", "enabled", `select_card_id: ${prev_card_id}`);
                 }
-
-                vm_left_marker.setAttribute("onhover", left_onhover);
-                vm_left_marker.setAttribute("color", left_color);
-                vm_left_marker.setAttribute("opacity", left_opacity);
-                vm_left_marker.setAttribute("select_card_id", parseInt(card_arrow_selected) - 1);
-
-                let vm_right_marker = document.getElementById("view_marker_right_select");
-                let right_onhover = "disabled: true";
-                let right_color = "#d8d8d8";
-                let right_opacity = "0.5";
 
                 // check number of cards, if more than the current new ID, show next arrow button
                 let cards_len = card_data.length;
                 let new_card_id = parseInt(card_arrow_selected) + 1;
                 if (cards_len - 1 > card_arrow_selected) {
-                    right_onhover = "disabled: false";
-                    right_color = "#303971";
-                    right_opacity = "0.7";
-                    vm_right_marker.setAttribute("select_card_id", new_card_id);
+                    marker_enabler("view_marker_right_select", "enabled", `select_card_id: ${new_card_id}`);
+                } else {
+                    marker_enabler("view_marker_right_select", "disabled", `select_card_id: ${new_card_id}`);
                 }
-                vm_right_marker.setAttribute("onhover", right_onhover);
-                vm_right_marker.setAttribute("color", right_color);
-                vm_right_marker.setAttribute("opacity", right_opacity);
 
                 // changing the current card number out of total on card_tracker
                 $("#card_tracker").attr("value", `${new_card_id}/${cards_len}`);
@@ -265,9 +257,7 @@
                     $("#edit_marker_card_text_plane").attr('visible', "false");
 
                     // hide the save button
-                    let save_button = document.getElementById("editSaveBtn");
-                    save_button.setAttribute("onhover", "disabled: true");
-                    save_button.setAttribute("color", "#d8d8d8");
+                    marker_enabler("editSaveBtn", "disabled", "");
 
                     // re-enable onhover
                     $("#view_marker_left_select").attr('visible', "true");
@@ -296,9 +286,7 @@
                 $("#view_marker_right_select").attr('visible', "false");
 
                 // change save button to be available 
-                let save_button = document.getElementById("editSaveBtn");
-                save_button.setAttribute("onhover", "disabled: false");
-                save_button.setAttribute("color", "#303971");
+                marker_enabler("editSaveBtn", "enabled", "");
             }
 
             // if one of the edit_marker_* planes are selected 
@@ -326,9 +314,20 @@
                 old_plane.appendChild(colour_plane);
 
                 // disable onhover of itself 
-                $(`#${el_clicked_id}`).attr('onhover', "disabled: true");
-                $(`#${el_clicked_id}`).attr('color', "#ffffff");
-                $(`#${el_clicked_id}`).attr('opacity', "1.0");
+                marker_enabler(`${el_clicked_id}`, "disabled", "color: #ffffff; opacity: 1.0");
+
+                // if current plane, disable the other
+                let edit_dict = {
+                    card: "edit_marker_title",
+                    title: "edit_marker_card_text"
+                }
+
+                // if one of the planes is selected, turn off the other
+                let edit_type = (el_clicked_id.split("_"))[2];
+
+                // remove instance of pipe from the other object if swapping 
+                let other_obj_text = $(`#${edit_dict[edit_type]}`).attr("value").replaceAll('|', '');
+                $(`#${edit_dict[edit_type]}`).attr("value", other_obj_text);
 
                 // add a pipe to the end of the text string, if already one, don't add
                 if (edit_text.slice(-1) != "|") {
@@ -339,7 +338,8 @@
                 }
 
                 // set an attribute to show which field is being edited
-                $(`#${edit_text_field_name}`).attr("editing", "true");
+                $(`#${edit_text_field_name}`).attr("editing", true);
+                $(`#${edit_dict[edit_type]}`).attr("editing", false);
 
                 // disable WASD controls if edit plane visible 
                 let is_visible = $("#edit_marker_card_text_plane").attr('visible');
@@ -360,9 +360,15 @@
                 // pull which card is being edited
                 let edited_card_id = parseInt($("#view_marker_plane").attr("marker_curr_card_id")) - 1;
 
+                // pull which marker in the list is to be updated, and update with new title
+                var marker_list_selected = $(`#view_marker_plane`).attr("selected_marker");
+                var curr_ml_title = $(`#${marker_list_selected}_text`).attr("value");
+                var curr_sel_val = curr_ml_title.substring(0, 4);
+
+                $(`#${marker_list_selected}_text`).attr("value", `${curr_sel_val}${edited_title}`);
+
                 // pull which marker to be updated, also use this if marker value is to be updated
                 var curr_marker_value = $("#view_marker_plane").attr("marker_value");
-                console.log("saving " + curr_marker_value);
 
                 // edit the original JSON stored in the card
                 var data_str = $("#view_marker_plane").attr("marker_card_data");
@@ -411,8 +417,6 @@
                         marker_contents.cards = card_data;
 
                         const update_request = object_store.put(marker_contents);
-                        update_request.onsuccess = () => {
-                        }
                     }
                 }
 
@@ -421,9 +425,7 @@
                 $("#edit_marker_card_text_plane").attr("visible", "false");
 
                 // "turn off" save button once complete 
-                let save_button = document.getElementById("editSaveBtn");
-                save_button.setAttribute("onhover", "disabled: true");
-                save_button.setAttribute("color", "#d8d8d8");
+                marker_enabler("editSaveBtn", "disabled", "");
             }
 
             // if add/subtract card buttons are selected
@@ -446,31 +448,36 @@
 
                 // check for current card ID which is zero-indexed
                 let curr_card_id = parseInt($("#view_marker_plane").attr("marker_curr_card_id")) - 1;
+                console.log("current card has ID " + curr_card_id);
 
                 let card_in_question_id;
                 let marker_text;
                 if (card_what == "Add") {
                     // take the current card ID and incremenent by 1 
-                    card_in_question_id = curr_card_id + 1;
+                    card_in_question_id = curr_card_id + cw_val;
                     marker_text = ""
                 } else if (card_what == "Subtract") {
-                    // don't change current card if removing
+                    // if subtracting, the card's ID position remains the same
                     card_in_question_id = curr_card_id;
+                    console.log("new card should has ID " + card_in_question_id);
 
-                    // try and pull the details of the next card which will take the current ID, if does not exist, go to previous 
+                    // try and pull the details of the previous card which will take the current ID, if does not exist, go to previous 
                     marker_text = card_data[card_in_question_id + cw_val].card_content;
+                    console.log("card content of " + marker_text);
                 }
 
                 // change current card ID 
                 $("#view_marker_plane").attr("marker_curr_card_id", card_in_question_id + 1);
 
-                // change card data to be empty 
+                // change card data to be empty or fill with last card details
                 $("#view_marker_card_text").attr("value", marker_text);
 
                 if (card_what == "Subtract") {
+                    // removing the old card data from the cards list
                     card_data = card_data.filter(function (json_obj) {
                         return json_obj.card_id != card_in_question_id;
                     });
+                    card_in_question_id -= 1;
                 }
 
                 for (var i in card_data) {
@@ -497,39 +504,24 @@
                 $("#view_marker_plane").attr("marker_card_data", card_data_str);
 
                 // change the status card to be new card/(old total+1)
-                $("#card_tracker").attr("value", `${card_in_question_id + cw_val}/${card_data.length}`);
+                $("#card_tracker").attr("value", `${card_in_question_id + 1}/${card_data.length}`);
 
                 // change left and right select arrows 
-                let vm_left_marker = document.getElementById("view_marker_left_select");
-
                 // if removing first card and there'll be one left
-                let left_onhover = "disabled: false";
-                let left_color = "#303971";
-                let left_opacity = "0.7";
+                let left_card_id = card_in_question_id - 1;
                 if (card_data.length == 1) {
-                    left_onhover = "disabled: true";
-                    left_color = "#d8d8d8";
-                    left_opacity = "0.5";
+                    marker_enabler("view_marker_left_select", "disabled", `select_card_id: ${left_card_id}`);
+                } else {
+                    marker_enabler("view_marker_left_select", "enabled", `select_card_id: ${left_card_id}`);
                 }
-                vm_left_marker.setAttribute("onhover", left_onhover);
-                vm_left_marker.setAttribute("color", left_color);
-                vm_left_marker.setAttribute("opacity", left_opacity);
-                vm_left_marker.setAttribute("select_card_id", `${card_in_question_id - 1}`);
 
                 // if last card, turn off going right 
-                let right_onhover = "disabled: false";
-                let right_color = "#303971";
-                let right_opacity = "0.7";
+                let right_card_id = card_in_question_id + 1;
                 if ((card_in_question_id + 1 - card_data.length) == 0) {
-                    right_onhover = "disabled: true";
-                    right_color = "#d8d8d8";
-                    right_opacity = "0.5";
+                    marker_enabler("view_marker_right_select", "disabled", `select_card_id: ${right_card_id}`);
+                } else {
+                    marker_enabler("view_marker_right_select", "enabled", `select_card_id: ${right_card_id}`);
                 }
-                let vm_right_marker = document.getElementById("view_marker_right_select");
-                vm_right_marker.setAttribute("onhover", right_onhover);
-                vm_right_marker.setAttribute("color", right_color);
-                vm_right_marker.setAttribute("opacity", right_opacity);
-                vm_right_marker.setAttribute("select_card_id", `${card_in_question_id + 1}`);
 
                 // find which marker to be updated
                 var curr_marker_value = $("#view_marker_plane").attr("marker_value");
@@ -654,9 +646,6 @@
 
                         var cur_val_index = object_store.index('marker_id')
                         var object_store_req = cur_val_index.get(marker_to_delete_id);
-
-                        // console.log(marker_to_delete_id);
-
                         object_store_req.onsuccess = function () {
                             var marker_contents = object_store_req.result;
                             object_store.delete(marker_contents.id);
@@ -693,19 +682,32 @@
             if (el_clicked_id.includes("markers_select")) {
                 let marker_list_what = el_clicked_id.replace("markers_select_", "");
                 let mlw_dict = {
+                    down: "markers_select_up",
+                    up: "markers_select_down"
+                }
+                let mlw = mlw_dict[marker_list_what];
+
+                let mlw_dict_amnt = {
                     down: 1,
                     up: -1
                 }
-
-                console.log(mlw_dict[marker_list_what]);
 
                 // if up or down selected, move list either way by one
                 var db_open_request = window.indexedDB.open('markers_db', 1);
                 db_open_request.onsuccess = function (event) {
                     db = db_open_request.result;
-                    displayData(db, "update_list", mlw_dict[marker_list_what]);
-                }
 
+                    // check if arrow is disabled 
+                    var arrow_status = $(`#${el_clicked_id}`).attr('status');
+                    console.log(arrow_status + " " + el_clicked_id);
+                    if (arrow_status == "enabled") {
+                        displayData(db, "update_list", mlw_dict_amnt[marker_list_what]);
+
+                        // enable the other button, if the "opposite" is pressed
+                        marker_enabler(mlw, "enabled", "status: enabled");
+
+                    }
+                }
             }
         }
 
@@ -718,7 +720,7 @@
 
                 }
             };
-            XHR.open("POST", `https://5gwebxr.com:8444/${route}/`);
+            XHR.open("POST", `https://192.168.1.101:8444/${route}/`);
             XHR.setRequestHeader("Content-type", "application/json");
             XHR.send(JSON.stringify(data));
         }
@@ -789,17 +791,13 @@
                             el.setAttribute('opacity', defaultOpacity);
                         }
                     });
-                } else {
-                    // console.log(data.message);
                 }
-
-
             }
         });
 
         document.addEventListener("keydown", function (event) {
             //  find the field that is being edited
-            var editing_elements = Array.from(document.querySelectorAll("[id^='edit_']"));
+            var editing_elements = Array.from(document.querySelectorAll("a-text[id^='edit_']"));
 
             // re-adding WASD controls if shift is pressed alongside WASD keys
             const wasd = ["w", "a", "s", "d"];
@@ -811,9 +809,9 @@
 
             for (var i = 0; i < editing_elements.length; i++) {
                 var curr_el = editing_elements[i];
-                var is_editable = document.getElementById(curr_el.id).hasAttribute("editing");
+                var is_editable = $(`#${curr_el.id}`).attr("editing");
 
-                if (is_editable) {
+                if (is_editable === "true") {
                     // TO IMPLEMENT:
                     // - BEHAVIOUR TO STOP BOX OVERFLOW! 
                     // - COPY AND PASTING
@@ -890,7 +888,7 @@
         debug: false;
         adapter: janus;
         connectOnLoad: true;
-        serverURL: wss://5gwebxr.com:8989/janus; ">
+        serverURL: wss://192.168.1.101:8989/janus; ">
 
         <a-assets>
             <img id="card"
@@ -912,7 +910,8 @@
                 </a-entity>
             </template>
 
-            <a-asset-item id="fabLabModel" src="assets/FabLabAll.glb"></a-asset-item>
+            <a-asset-item id="fabLabModel" src="assets/FabLab.gltf"></a-asset-item>
+            <a-asset-item id="laserCutterModel" src="assets/models/LaserCutter.gltf"></a-asset-item>
 
             <img id="groundTexture" src="https://cdn.aframe.io/a-painter/images/floor.jpg">
 
@@ -922,6 +921,13 @@
         <a-entity gltf-model="#fabLabModel" position="0 0 0" scale="0.12 0.12 0.12"></a-entity>
         <a-entity light="color: #ffffff; intensity: 1" position="2 1.8 0"></a-entity>
         <a-entity light="color: #ffffff; intensity: 0.9" position="0.9 2.0 -6"></a-entity>
+
+        <!-- Loading laser cutter -->
+        <a-entity gltf-model="#laserCutterModel" position="-1 0 -16.2" scale="1.2 1.2 1.2"></a-entity>
+
+        <!-- Teleport circle -->
+        <a-circle id="tel_circ_ground" material="side: double; color: #FF4949; opacity: 0.75" position="4 0.1 -15" rotation="90 0 0"
+            radius="0.75"></a-circle>
 
         <a-plane id="camera_back" material="side: double; color: #ffffff; transparent: true; opacity: 1.0" width="2"
             height="1.5" position="-1 2 -4.99"></a-plane>
@@ -965,13 +971,13 @@
             </a-plane>
 
             <!-- Moving through the list of markers -->
-            <a-plane id="markers_select_up" material="side: double; color: #303971; transparent: true; opacity: 0.7;"
-                position="-1.15 0.12 0" height="0.2" width="0.2" depth="0.02" onhover>
+            <a-plane id="markers_select_up" material="side: double; color: #d8d8d8; transparent: true; opacity: 0.7;"
+                position="-1.15 0.12 0" height="0.2" width="0.2" depth="0.02" onhover="disabled: true">
                 <a-image src="#iconChevron" material="alphaTest: 0.5" position="0 0 0.01" width="1" scale="0.1 0.1 0.1"
                     rotation="0 0 90"></a-image>
             </a-plane>
-            <a-plane id="markers_select_down" material="side: double; color: #303971; transparent: true; opacity: 0.7;"
-                position="-1.15 -0.12 0" height="0.2" width="0.2" depth="0.02" onhover>
+            <a-plane id="markers_select_down" material="side: double; color: #d8d8d8; transparent: true; opacity: 0.7;"
+                position="-1.15 -0.12 0" height="0.2" width="0.2" depth="0.02" onhover="disabled: true">
                 <a-image src="#iconChevron" material="alphaTest: 0.5" position="0 0 0.01" width="1" scale="0.1 0.1 0.1"
                     rotation="0 0 -90"></a-image>
             </a-plane>
@@ -987,9 +993,8 @@
             <a-plane id="view_marker_plane" material="side: double; color: #303971; transparent: true; opacity: 0.7"
                 height="0.7" width="1" depth="0.01">
                 <a-text id="view_marker_title" position="-0.47 0.25 0" scale="0.5 0.5 0.5" value="Card title"></a-text>
-                <a-text id="view_marker_card_text" position="-0.46 0.13 0" wrap-count="26" scale="0.15 0.15 0.15"
-                    value="Card content"></a-text>
-                <a-entity textarea></a-entity>
+                <a-text id="view_marker_card_text" anchor="left" baseline="top" position="-0.46 0.13 0" wrap-count="35"
+                    scale="0.15 0.15 0.15" value="Card content"></a-text>
 
                 <a-text id="card_tracker" position="0.4 -0.3 0" scale="0.15 0.15 0.15" value="-/-"></a-text>
 
@@ -997,12 +1002,13 @@
                 <a-plane id="edit_marker_title_plane" color="#ffffff" position="0 0.25 0.02" height="0.13" width="0.95"
                     onhover visible="false">
                     <a-text id="edit_marker_title" color="#000000" position="-0.47 0 0" scale="0.45 0.45 0.45"
-                        value="Card title"></a-text>
+                        editing="false" value="Card title"></a-text>
                 </a-plane>
                 <a-plane id="edit_marker_card_text_plane" color="#ffffff" position="0 -0.08 0.02" height="0.48"
                     width="0.95" onhover visible="false">
                     <a-text id="edit_marker_card_text" anchor="left" baseline="top" color="#000000"
-                        position="-0.44 0.20 0" scale="0.17 0.17 0.17" wrap-count="35" value="Card content"></a-text>
+                        position="-0.44 0.20 0" scale="0.17 0.17 0.17" wrap-count="35" editing="false"
+                        value="Card content"></a-text>
                 </a-plane>
             </a-plane>
 
@@ -1226,12 +1232,37 @@
                     count_request.onsuccess = function () {
                         var total_markers = count_request.result;
                         marker_show: if (cursor_count <= total_markers) {
-                            if (type == "new_marker" && cursor_count < (total_markers - 4) || type == "default" && cursor_count > 5 ) {
+                            // find current first and last markers
+                            var first_marker_idb_id = $("#select_marker1_text").attr("idb_id");
+
+                            // search which marker is the last one
+                            var last_marker_idb_id;
+                            for (var i = 0; i < 4; i++) {
+                                var check_idb_id = $(`#select_marker${1 + i}_text`).attr("idb_id");
+                                if (typeof check_idb_id !== "undefined") {
+                                    last_marker_idb_id = check_idb_id;
+                                }
+                            }
+
+                            if (type == "default") {
+                                // on initial load, check number of markers, if >5 show down arrow
+                                if (total_markers > 5) {
+                                    // enable down arrow
+                                    marker_enabler("markers_select_down", "enabled", "status: enabled");
+                                }
+                            }
+
+                            if (type == "new_marker" && cursor_count < (total_markers - 4) || type == "default" && cursor_count > 5) {
                                 // if new marker added, do not update markers list until total_markers-5 cycled through 
                                 break marker_show;
                             }
 
+                            if (type == "new_marker") {
+                                marker_enabler("markers_select_up", "enabled", "status: enabled");
+                            }
+
                             if (type == "new_marker" && cursor_count == (total_markers - 4)) {
+                                // reset marker count list every 5 markers
                                 select_marker_count = 0;
                             }
 
@@ -1241,38 +1272,41 @@
                                     // loop and set the markers as default not available
                                     for (var i = 1; i < 6; i++) {
                                         if (i > total_markers) {
-                                            console.log(i + " " + total_markers);
                                             var marker_to_change_text = document.getElementById(`select_marker${i}_text`);
                                             marker_to_change_text.setAttribute("value", "No marker available");
-
-                                            var marker_to_change = document.getElementById(`select_marker${i}`);
-                                            marker_to_change.setAttribute("onhover", "disabled: true");
-                                            marker_to_change.setAttribute("material", "side: double; color: #d8d8d8; transparent: true; opacity: 0.5");
+                                            marker_enabler(`select_marker${i}`, "disabled", "");
                                         }
+                                        marker_enabler("markers_select_down", "disabled", "status: disabled");
                                     }
+                                } else {
+                                    // enable list mover arrow if greater than five markers
+                                    marker_enabler("markers_select_down", "enabled", "status: enabled");
                                 }
                             }
 
                             if (type == "update_list" && amount != 0) {
-                                // find current first and last markers
-                                var first_marker_idb_id = $("#select_marker1_text").attr("idb_id");
-                                var fifth_marker_idb_id = $("#select_marker5_text").attr("idb_id");
+                                // if the first marker has an IDB ID of 1, disable up arrow
+                                if (first_marker_idb_id == 1) {
+                                    marker_enabler("markers_select_up", "disabled", "status: disabled");
+                                } else {
+                                    marker_enabler("markers_select_up", "enabled", "status: enabled");
+                                }
 
                                 var new_start_id = parseInt(first_marker_idb_id) + amount;
-                                if ((new_start_id-cursor_count)>0) {
+                                if ((new_start_id - cursor_count) > 0) {
+                                    marker_enabler("markers_select_down", "enabled", "status: enabled");
                                     // avoid rendering first marker
                                     select_marker_count = -1;
+
+                                    // don't do anything if last marker is greater than total number of markers
+                                    var fifth_marker_idb_id = $(`#select_marker5_text`).attr("idb_id");
+                                    if (fifth_marker_idb_id == (total_markers - 1)) {
+                                        // disable down selector
+                                        marker_enabler("markers_select_down", "disabled", "status: disabled");
+                                    }
                                     break marker_show;
                                 }
-
-                                // don't do anything if last marker is greater than total number of markers
-                                if (fifth_marker_idb_id == (total_markers-1)) {
-                                    // disable down selector
-                                }
-
                             }
-
-                            console.log(cursor.value.marker_id + " " + (select_marker_count+1) + " " + cursor.value.marker_title + " " + cursor_count);
 
                             // Setting title text of the marker to text field
                             const marker_el_text = document.getElementById(`select_marker${select_marker_count + 1}_text`);
@@ -1290,6 +1324,8 @@
                                 // change active selected marker on the list to the new marker (it will always be last one)
                                 selected_marker("select_marker5");
                             }
+
+                            $("#viewing_markers").attr("value", `Viewing markers ${first_marker_idb_id} to ${parseInt(last_marker_idb_id) + 1} out of ${total_markers}`);
                         }
                         cursor_count++;
                         select_marker_count++;
@@ -1297,9 +1333,6 @@
                     // Iterate to the next item in the cursor
                     cursor.continue();
                 }
-
-                const view_markers = document.getElementById(`viewing_markers`);
-                view_markers.setAttribute("value", `Viewing markers 1 to ${cursor_count - 1} out of ${cursor_count - 1}`);
             });
         }
 
@@ -1376,40 +1409,9 @@
                         objectStore.createIndex('marker_title', 'marker_title', { unique: false });
                         objectStore.createIndex('marker_value', 'marker_value', { unique: false });
                     });
-
-                    // console.log(returned_data);
-
-                    // store marker data in local IndexedDB
-                    // var idb = importIDB("markers_db", "markers_os", returned_data); 
-                    // displayData(idb);
-
-                    // if (route == "markers") {
-                    //     // create markers programatically from data returned from server
-                    //     const camera = document.querySelector('a-camera');
-                    //     const sceneEl = document.querySelector('a-scene');
-
-                    //     for (var i=0; i<num_items; i++) {
-                    //         let curr_marker = returned_data[i];
-                    //         console.log(curr_marker);
-                    //         let cm_value = curr_marker.marker_value;
-                    //         let cm_id = curr_marker.marker_id;
-                    //         let cm_title = curr_marker.marker_title;
-                    //         // console.log(cm_value, cm_id);
-
-                    //         // // create marker to be recognised
-                    //         // const newMarker = document.createElement("a-marker");
-                    //         // newMarker.setAttribute("type", "barcode");
-                    //         // newMarker.setAttribute("value", cm_value);
-                    //         // newMarker.setAttribute("id", cm_id);
-                    //         // newMarker.setAttribute("registerevents", "");
-                    //         // sceneEl.appendChild(newMarker);
-                    //     }
-
-                    // }
-
                 }
             };
-            XHR.open("GET", `https://5gwebxr.com:8444/${route}/`);
+            XHR.open("GET", `https://192.168.1.101:8444/${route}/`);
             XHR.send();
         }
 
