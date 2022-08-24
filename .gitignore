@@ -59,3 +59,5 @@ examples/dist
 # Webstorm
 /.idea/*
 5gwebxr/assets/FabLabAll.glb
+
+middleware/stream_capture/videos/

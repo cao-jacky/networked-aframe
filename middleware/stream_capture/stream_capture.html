@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Server Stream Capture</title>
+    <style>body { font-family: sans-serif; }</style>
+  </head>
+  <body>
+    <p>
+      This page is part of CoWebXR, a collaborative web-based XR system. 
+      The page connects to the Janus gateway server and retrieves the different user
+      connected video streams. These streams are then forwarded to a script which 
+      will save and forward the videos for analysis. 
+    </p>
+
+    <form method="GET"><label>Server: <input id="janusServer" name="janus"/></label><input type="submit" value="Go" /></form>
+    <p><label>Status: </label><span id="status"></span></p>
+
+    <!-- <p>
+      <button id="micButton">Share microphone</button>
+      <button id="screenButton">Share screen</button>
+    </p> -->
+
+    <fieldset>
+      <legend>Data messages</legend>
+      <div><label>Message count: </label><span id="messageCount"></span></div>
+      <!-- <button id="saveButton">Save</button> -->
+      <!-- <button id="clearButton">Clear</button> -->
+    </fieldset>
+
+    <script crossorigin src="https://unpkg.com/file-saver@1.3.3/FileSaver.min.js"></script>
+    <script crossorigin src="https://unpkg.com/webrtc-adapter@6/out/adapter.js"></script>
+    <script crossorigin src="https://unpkg.com/minijanus/bundle.js"></script>
+    <script src="stream_capture.js"></script>
+  </body>
+</html>
