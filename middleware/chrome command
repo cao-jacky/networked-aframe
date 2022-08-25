@@ -1,0 +1,8 @@
+google-chrome --ignore-gpu-blocklist --disable-features=UseChromeOSDirectVideoDecoder --enable-unsafe-webgpu --enable-features=Vulkan,UseSkiaRenderer --use-gl=desktop --enable-features=VaapiVideoEncoder,VaapiVideoDecoder,CanvasOopRasterization
+
+google-chrome --disable-features=UseChromeOSDirectVideoDecoder --use-gl=desktop --enable-features=VaapiVideoEncoder,VaapiVideoDecoder,CanvasOopRasterization
+
+google-chrome --headless file:///home/jacky/research/networked-aframe/middleware/stream_capture/stream_capture.html?janus=wss%3A%2F%2F5gwebxr.com%3A8989%2Fjanus
+
+--disable-features=UseChromeOSDirectVideoDecoder
+

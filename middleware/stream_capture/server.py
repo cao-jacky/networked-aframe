@@ -28,13 +28,13 @@ async def server(websocket):
             with open(f'videos/{client_id}.webm', 'wb') as f_vid:
                 f_vid.write((data))
 
-            start = time.time_ns()
-            os.system(
-                f'ffmpeg -hide_banner -loglevel error -y -i videos/{client_id}.webm videos/{client_id}.mp4')
-            finish = time.time_ns()
+            # start = time.time_ns()
+            # os.system(
+            #     f'ffmpeg -hide_banner -loglevel error -y -i videos/{client_id}.webm videos/{client_id}.mp4')
+            # finish = time.time_ns()
 
-            print(
-                f"[{time.time_ns()//1000000} {client_id} {track}] Converting the received video from .webm to .mp4 takes {(finish-start) // 1_000_000} ms")
+            # print(
+            #     f"[{time.time_ns()//1000000} {client_id} {track}] Converting the received video from .webm to .mp4 takes {(finish-start) // 1_000_000} ms")
             
             client_track = f"{client_id} {track}"
             sock.sendto(str.encode(client_track), (UDP_IP, UDP_PORT))
@@ -47,7 +47,7 @@ async def server(websocket):
             client_id = data_split[1]
 
 
-start_server = websockets.serve(server, 'localhost', 8000)
+start_server = websockets.serve(server, '0.0.0.0', 8000)
 asyncio.get_event_loop().run_until_complete(start_server)
 asyncio.get_event_loop().run_forever()
 

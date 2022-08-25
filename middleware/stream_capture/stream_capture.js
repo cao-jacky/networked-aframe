@@ -6,7 +6,7 @@ const ws = new WebSocket(`ws://localhost:8000`);
 const mediaStream = new MediaStream();
 
 const recorderOptions = {
-  mimeType: 'video/webm',
+  mimeType: 'video/webm;codecs=vp9',
   videoBitsPerSecond: 200000 // 0.2 Mbit/sec.
 };
 
@@ -78,10 +78,10 @@ function addUser(session, userId) {
           ws.send(session.id + " " + userId);
           ws.send(new Blob(chunks));
         };
-        setTimeout(()=> recorder.stop(), 150); // we'll have a x seconds media file
+        setTimeout(()=> recorder.stop(), 50); // we'll have a x seconds media file
         recorder.start();
      }
-     setInterval(record_and_send, 150); // generate a new file every x seconds
+     setInterval(record_and_send, 50); // generate a new file every x seconds
     });
 }
 

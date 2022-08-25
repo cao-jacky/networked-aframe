@@ -25,7 +25,7 @@ def server():
             f"[{time.time_ns()//1000000} {client_id} {track}] Request received to process video")
 
         start = time.time_ns()
-        vidcap = cv2.VideoCapture(f'videos/{client_id}.mp4')
+        vidcap = cv2.VideoCapture(f'videos/{client_id}.webm')
         success, image = vidcap.read()
         count = 0
         while success:
@@ -40,7 +40,7 @@ def server():
             count += 1
         finish = time.time_ns()
         print(
-            f"[{time.time_ns()//1000000}] Analysing video in YOLOv5 took {(finish-start) // 1_000_000} ms")
+            f"[{time.time_ns()//1000000} {client_id} {track}] Analysing video in YOLOv5 took {(finish-start) // 1_000_000} ms")
 
 
 if __name__ == "__main__":
