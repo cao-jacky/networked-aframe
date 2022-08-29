@@ -29,6 +29,25 @@
     <script src="https://kit.fontawesome.com/83f0ae3239.js" crossorigin="anonymous"></script>
 
     <link rel="stylesheet" href="/assets/css/passthrough_ar.css" type="text/css" media="all" crossorigin="anonymous">
+
+    <script>
+      function sendEvents() {
+        NAF.connection.broadcastDataGuaranteed('reliableBroadcast', '');
+        NAF.connection.broadcastData('unreliableBroadcast', '');
+
+        var clients = NAF.connection.getConnectedClients();
+
+        var firstClient;
+        for (firstClient in clients) break;
+
+        console.error(clients);
+        console.error(firstClient);
+
+        NAF.connection.sendDataGuaranteed(firstClient, 'reliableSend', '');
+        NAF.connection.sendData(firstClient, 'unreliableSend', '');
+      }
+    </script>
+
 </head>
 
 <body>
@@ -745,7 +764,8 @@
         // Called by Networked-Aframe when connected to server
         function onConnect() {
             console.log("onConnect", new Date());
-        }
+        // setTimeout(sendEvents, 3000);
+	}
 
     </script>
 </body>

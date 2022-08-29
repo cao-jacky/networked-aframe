@@ -22,7 +22,7 @@ const app = express();
 //app.use(express.static(path.resolve(__dirname, "..", "dist")));
 app.use(express.static(path.resolve(__dirname, "..", "5gwebxr")));
 app.use("/dist", express.static(path.resolve(__dirname, "..", "dist")));
-app.use("/distar", express.static(path.resolve(__dirname, "../..", "ar_social_distancing/application_web")));
+app.use("/arsocialdistancing", express.static(path.resolve(__dirname, "../..", "ar_social_distancing")));
 app.use(cors()); 
 
 // Serve the example and build the bundle in development.
@@ -41,8 +41,7 @@ if (process.env.NODE_ENV === "development") {
 // Start Express https server
 const webServer = https.createServer({
   key:  fs.readFileSync("/etc/letsencrypt/live/5gwebxr.com/privkey.pem"),
-  ca:   fs.readFileSync("/etc/letsencrypt/live/5gwebxr.com/chain.pem"),
-  cert: fs.readFileSync("/etc/letsencrypt/live/5gwebxr.com/fullchain.pem")	
+  cert: fs.readFileSync("/etc/letsencrypt/live/5gwebxr.com/cert.pem")	
   //key:  fs.readFileSync("key.pem"),
   //cert: fs.readFileSync("cert.pem")	
 }, app);
