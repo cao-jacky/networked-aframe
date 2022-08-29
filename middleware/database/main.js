@@ -1,8 +1,8 @@
 var fs = require('fs');
 var http = require('http');
 var https = require('https');
-var privateKey = fs.readFileSync('../server/key.pem', 'utf8');
-var certificate = fs.readFileSync('../server/cert.pem', 'utf8');
+var privateKey = fs.readFileSync('/etc/letsencrypt/live/5gwebxr.com/privkey.pem', 'utf8');
+var certificate = fs.readFileSync('/etc/letsencrypt/live/5gwebxr.com/cert.pem', 'utf8');
 
 var credentials = { key: privateKey, cert: certificate };
 const express = require('express');

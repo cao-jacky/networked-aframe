@@ -885,7 +885,7 @@
         color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false"
         device-orientation-permission-ui="enabled: false" networked-scene="
         room: 1;
-        debug: false;
+        debug: true;
         adapter: janus;
         connectOnLoad: true;
         serverURL: wss://192.168.1.102:8989/janus; ">
@@ -1456,6 +1456,13 @@
     </script>
 
     <script>
+	    document.body.addEventListener('clientConnected', function (evt) {
+  console.error('clientConnected event. clientId =', evt.detail.clientId);
+});
+getMediaStream(evt.detail.clientId);
+    </script>
+
+    <script>
         // Define custom schema for syncing avatar color, set by random-color
         NAF.schemas.add({
             template: '#avatar-template',
@@ -1476,6 +1483,7 @@
     </script>
 
     <script>
+
         AFRAME.registerComponent("fit", {
             init: function () {
                 const plane = document.querySelector("#avatarPlane");
