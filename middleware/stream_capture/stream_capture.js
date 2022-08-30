@@ -3,10 +3,9 @@ var USER_ID = new String(Math.floor(Math.random() * (1000000001)));
 const roomId = params.get("room") != null ? params.get("room") : "1";
 
 const ws = new WebSocket(`ws://localhost:8000`);
-const mediaStream = new MediaStream();
 
 const recorderOptions = {
-  mimeType: 'video/webm;codecs=vp9',
+  mimeType: 'video/webm; codecs=h264',
   videoBitsPerSecond: 200000 // 0.2 Mbit/sec.
 };
 
@@ -68,21 +67,7 @@ function connect(server) {
 function addUser(session, userId) {
   console.info("Adding user " + userId + ".");
   return attachSubscriber(session, userId)
-    .then(x => { c.subscribers[userId] = x; }, err => console.error("Error attaching subscriber: ", err))
-    .then(x => {
-      function record_and_send() {
-        const recorder = new MediaRecorder(mediaStream, recorderOptions);
-        const chunks = [];
-        recorder.ondataavailable = e => chunks.push(e.data);
-        recorder.onstop = e => {
-          ws.send(session.id + " " + userId);
-          ws.send(new Blob(chunks));
-        };
-        setTimeout(()=> recorder.stop(), 50); // we'll have a x seconds media file
-        recorder.start();
-     }
-     setInterval(record_and_send, 50); // generate a new file every x seconds
-    });
+    .then(x => { c.subscribers[userId] = x; }, err => console.error("Error attaching subscriber: ", err));
 }
 
 function removeUser(session, userId) {
@@ -216,6 +201,7 @@ function attachSubscriber(session, otherId) {
     mediaEl.srcObject = ev.streams[0];
     document.body.appendChild(mediaEl);
 
+    const mediaStream = new MediaStream();
     if (ev.track.kind == "video") {
       const videoTrack = ev.streams[0].getVideoTracks()[0];
       // const audioTrack = ev.streams[0].getAudioTracks()[0];
@@ -223,6 +209,18 @@ function attachSubscriber(session, otherId) {
       // mediaStream.addTrack(audioTrack);
     }
 
+    function record_and_send() {
+      const recorder = new MediaRecorder(mediaStream, recorderOptions);
+      const chunks = [];
+      recorder.ondataavailable = e => chunks.push(e.data);
+      recorder.onstop = e => {
+        ws.send(session.id + " " + otherId);
+        ws.send(new Blob(chunks));
+      };
+      setTimeout(()=> recorder.stop(), 50); // we'll have a x seconds media file
+      recorder.start();
+   }
+   setInterval(record_and_send, 50); // generate a new file every x seconds
   });
 
   return handle.attach("janus.plugin.sfu")

@@ -2,7 +2,7 @@ var fs = require('fs');
 var http = require('http');
 var https = require('https');
 var privateKey = fs.readFileSync('/etc/letsencrypt/live/5gwebxr.com/privkey.pem', 'utf8');
-var certificate = fs.readFileSync('/etc/letsencrypt/live/5gwebxr.com/cert.pem', 'utf8');
+var certificate = fs.readFileSync('/etc/letsencrypt/live/5gwebxr.com/chain.pem', 'utf8');
 
 var credentials = { key: privateKey, cert: certificate };
 const express = require('express');
@@ -155,6 +155,18 @@ async function marker_delete(marker) {
 	}
 }
 
+async function recognition_insert(results) {
+	try {
+		await client.connect();
+		const database = client.db("5gwebxr");
+		const result_details = database.collection("recognitions");
+
+		const result = await result_details.insertOne(results);
+		console.log(`A recognition result was inserted with the _id: ${result.insertedId}`);
+	} finally {
+		await client.close();
+	}
+}
 
 const app = express();
 app.use(cors({ origin: '*' }));
@@ -162,6 +174,7 @@ app.use(cors({ origin: '*' }));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
+// Users 
 app.post('/user_create', (req, res) => {
 	// console.log('Got body:', req.body);
 	console.log("Received user data to insert into database")
@@ -179,6 +192,7 @@ app.get('/user_list', (req, res) => {
 	})
 });
 
+// Markers
 app.get('/marker_ids', (req, res) => {
 	let marker_lists = marker_retrieve("ids");
 	marker_lists.then(function (result) {
@@ -203,17 +217,24 @@ app.post('/marker_update', express.json(), (req, res) => {
 	res.sendStatus(200);
 });
 
-app.post('/marker_insert', express.json(), (req,res) => {
-	marker_insert(req.body)
+app.post('/marker_insert', express.json(), (req, res) => {
+	marker_insert(req.body);
 	console.log("Inserting new marker");
 	res.sendStatus(200);
 });
 
-app.post('/marker_delete', express.json(), (req,res) => {
+app.post('/marker_delete', express.json(), (req, res) => {
 	marker_delete(req.body)
 	console.log("Deleting marker");
 	res.sendStatus(200);
 });
+
+// Recognition results
+app.post('/recognition_results', express.json(), (req, res) => {
+	recognition_insert(req.body);
+	console.log("Storing recongition results");
+	res.sendStatus(200);
+})
 
 var httpsServer = https.createServer(credentials, app);
 
