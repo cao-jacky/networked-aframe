@@ -1459,7 +1459,6 @@
         document.body.addEventListener('clientConnected', function (evt) {
             console.error('clientConnected event. clientId =', evt.detail.clientId);
         });
-        getMediaStream(evt.detail.clientId);
     </script>
 
     <script>
@@ -1483,7 +1482,38 @@
     </script>
 
     <script>
+        var sceneEl = document.querySelector('a-scene');
+        var entityEl = document.createElement('a-entity');
+        // Do `.setAttribute()`s to initialize the entity.
+        entityEl.setAttribute('geometry', {
+            primitive: 'box',
+            height: 3,
+            width: 1,
+        });
+        entityEl.setAttribute('position', { x: 1, y: 2, z: -3 });
+        sceneEl.appendChild(entityEl);
 
+        function retrieve_recognition() {
+            const XHR = new XMLHttpRequest();
+
+            XHR.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+
+                }
+            };
+            XHR.open("GET", `https://5gwebxr.com:8444/${route}/`);
+            XHR.send();
+        }
+
+        const interval = setInterval(function () {
+            retrieve_recognition()
+        }, 5000);
+
+        clearInterval(interval);
+
+    </script>
+
+    <script>
         AFRAME.registerComponent("fit", {
             init: function () {
                 const plane = document.querySelector("#avatarPlane");

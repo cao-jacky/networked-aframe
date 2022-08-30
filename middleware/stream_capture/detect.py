@@ -15,6 +15,7 @@ collection = db['recognitions']
 
 # print(collection.find_one())
 
+
 def server():
     UDP_IP = "127.0.0.1"
     UDP_PORT = 5000
@@ -41,16 +42,20 @@ def server():
             # cv2.imwrite("frame%d.jpg" % count, image)     # save frame as JPEG file
             if count < 1:
                 results = model(image)
-                results_json = results.pandas().xyxy[0].to_json(orient="records")
-                
+                results_json = results.pandas(
+                ).xyxy[0].to_json(orient="records")
+
                 results_to_insert = {
-                    "client": client_id, 
+                    "client": client_id,
                     "timestamp": time_recv,
                     "results": results_json
                 }
 
-                results_id = collection.insert_one(results_to_insert).inserted_id
-                print(results_id)
+                results_id = collection.insert_one(
+                    results_to_insert).inserted_id
+                print(
+                    f"[{time.time_ns()//1000000} {client_id} {track}] Inserted recognition results to cloud database")
+
                 # print(results.pandas().xyxy[0])
             else:
                 break

@@ -2,7 +2,7 @@ var fs = require('fs');
 var http = require('http');
 var https = require('https');
 var privateKey = fs.readFileSync('/etc/letsencrypt/live/5gwebxr.com/privkey.pem', 'utf8');
-var certificate = fs.readFileSync('/etc/letsencrypt/live/5gwebxr.com/chain.pem', 'utf8');
+var certificate = fs.readFileSync('/etc/letsencrypt/live/5gwebxr.com/cert.pem', 'utf8');
 
 var credentials = { key: privateKey, cert: certificate };
 const express = require('express');
@@ -168,6 +168,37 @@ async function recognition_insert(results) {
 	}
 }
 
+async function recongition_retrieve(client_id) {
+	try {
+		await client.connect();
+		const database = client.db("5gwebxr");
+		const result_details = database.collection("recognitions");
+
+		if (types_to_retrieve == "ids") {
+			project_string = {_id: 0, client: 1, timestamp: 1, results: 1};
+		} else if (types_to_retrieve == "all") {
+			project_string = {};
+		}
+
+		const result = await result_details
+			.find({client: client_id})
+			.project(project_string)
+			.toArray();
+		const result_total = result.length;
+
+		console.log(result);
+
+		var markers = [];
+		for (var i = 0; i < result_total; i++) {
+			curr_marker = JSON.parse(JSON.stringify(result[i], null, 4));
+			markers.push(curr_marker);
+		}
+		return markers;
+	} finally {
+		await client.close();
+	}
+}
+
 const app = express();
 app.use(cors({ origin: '*' }));
 
@@ -230,11 +261,17 @@ app.post('/marker_delete', express.json(), (req, res) => {
 });
 
 // Recognition results
-app.post('/recognition_results', express.json(), (req, res) => {
+app.post('/recognition', express.json(), (req, res) => {
 	recognition_insert(req.body);
 	console.log("Storing recongition results");
 	res.sendStatus(200);
-})
+});
+
+app.get('/recognition/:clientId', (req, res) => {
+	var data = {
+		"client": req.params.clientId
+	};
+});
 
 var httpsServer = https.createServer(credentials, app);
 
