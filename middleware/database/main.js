@@ -10,6 +10,7 @@ const bodyParser = require('body-parser');
 var cors = require('cors');
 
 var mongodb = require('mongodb');
+const { Console } = require('console');
 const uri = "mongodb://localhost:27017/";
 
 const client = new mongodb.MongoClient(uri);
@@ -271,6 +272,7 @@ app.get('/recognition/:clientId', (req, res) => {
 	var data = {
 		"client": req.params.clientId
 	};
+	console.log(data);
 });
 
 var httpsServer = https.createServer(credentials, app);

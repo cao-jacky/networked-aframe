@@ -1190,7 +1190,6 @@
                     state.currentStream.addTrack(stream.getVideoTracks()[0]);
                     await NAF.connection.adapter.setLocalMediaStream(state.currentStream);
                 }
-
                 state.cameraEnabled = !state.cameraEnabled;
                 cameraBtnEl.textContent = state.cameraEnabled ? 'Hide Camera to User' : 'Show Camera to User';
             });
@@ -1493,7 +1492,7 @@
         entityEl.setAttribute('position', { x: 1, y: 2, z: -3 });
         sceneEl.appendChild(entityEl);
 
-        function retrieve_recognition() {
+        function retrieve_recognition(client_id) {
             const XHR = new XMLHttpRequest();
 
             XHR.onreadystatechange = function () {
@@ -1501,15 +1500,16 @@
 
                 }
             };
-            XHR.open("GET", `https://5gwebxr.com:8444/${route}/`);
+            XHR.open("GET", `https://5gwebxr.com:8444/recognition/${client_id}/`);
             XHR.send();
         }
 
-        const interval = setInterval(function () {
+        const interval = window.setInterval(function () {
+            console.log("aaaahhh " + NAF.connection.adapter.clientId);
             retrieve_recognition()
         }, 5000);
 
-        clearInterval(interval);
+        // clearInterval(interval);
 
     </script>
 
