@@ -1505,8 +1505,8 @@
         }
 
         const interval = window.setInterval(function () {
-            console.log("aaaahhh " + NAF.connection.adapter.clientId);
-            retrieve_recognition()
+            console.log("Requesting latest recognition results for self client " + NAF.connection.adapter.clientId);
+            retrieve_recognition(NAF.connection.adapter.clientId)
         }, 5000);
 
         // clearInterval(interval);

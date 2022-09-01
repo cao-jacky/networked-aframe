@@ -203,6 +203,8 @@ function attachSubscriber(session, otherId) {
 
     const mediaStream = new MediaStream();
     if (ev.track.kind == "video") {
+      // mediaEl.setAttribute("width", "3840");
+      // mediaEl.setAttribute("height", "2160");
       const videoTrack = ev.streams[0].getVideoTracks()[0];
       // const audioTrack = ev.streams[0].getAudioTracks()[0];
       mediaStream.addTrack(videoTrack);

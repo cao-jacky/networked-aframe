@@ -31,21 +31,21 @@
     <link rel="stylesheet" href="/assets/css/passthrough_ar.css" type="text/css" media="all" crossorigin="anonymous">
 
     <script>
-      function sendEvents() {
-        NAF.connection.broadcastDataGuaranteed('reliableBroadcast', '');
-        NAF.connection.broadcastData('unreliableBroadcast', '');
+        function sendEvents() {
+            NAF.connection.broadcastDataGuaranteed('reliableBroadcast', '');
+            NAF.connection.broadcastData('unreliableBroadcast', '');
 
-        var clients = NAF.connection.getConnectedClients();
+            var clients = NAF.connection.getConnectedClients();
 
-        var firstClient;
-        for (firstClient in clients) break;
+            var firstClient;
+            for (firstClient in clients) break;
 
-        console.error(clients);
-        console.error(firstClient);
+            console.error(clients);
+            console.error(firstClient);
 
-        NAF.connection.sendDataGuaranteed(firstClient, 'reliableSend', '');
-        NAF.connection.sendData(firstClient, 'unreliableSend', '');
-      }
+            NAF.connection.sendDataGuaranteed(firstClient, 'reliableSend', '');
+            NAF.connection.sendData(firstClient, 'unreliableSend', '');
+        }
     </script>
 
 </head>
@@ -59,7 +59,7 @@
         debug: false;
         adapter: janus;
         connectOnLoad: true;
-        serverURL: wss://192.168.1.102:8989/janus;">
+        serverURL: wss://5gwebxr.com:8989/janus;">
         <a-assets>
             <img id="card"
                 src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.4/examples/image-tracking/assets/card-example/card.png" />
@@ -748,6 +748,106 @@
     </script>
 
     <script>
+        var sceneEl = document.querySelector('a-scene');
+        var entityEl = document.createElement('a-entity');
+        entityEl.setAttribute('geometry', {
+            primitive: 'plane',
+            height: 0.5,
+            width: 0.25,
+        });
+        // entityEl.object3D.position.set(0, 0, -1);
+        // entityEl.setAttribute('position', { x: 2, y: 2, z: -5 });
+        sceneEl.appendChild(entityEl);
+
+        var textEl = document.createElement('a-entity');
+        textEl.setAttribute('text', {
+            value: '',
+            height: 1,
+            width: 1
+        });
+        textEl.setAttribute('id', "recognition");
+        textEl.setAttribute('position', { x: 1, y: 0, z: -3 });
+        sceneEl.appendChild(textEl);
+
+
+        function retrieve_recognition(client_id) {
+            const XHR = new XMLHttpRequest();
+
+            XHR.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    const returned_data = JSON.parse(this.responseText);
+                    const recognition_results = JSON.parse(returned_data[0].results);
+
+                    const num_rr = recognition_results.length;
+                    // console.log("window size " + window.innerWidth + "x" + window.innerHeight);
+
+                    if (num_rr > 0) {
+                        var textElement = document.getElementById("recognition");
+                        textElement.innerHTML = '';
+                        for (var i = 0; i < num_rr; i++) {
+                            const curr_res = recognition_results[i];
+
+                            const x_min = curr_res.xmin;
+                            const x_max = curr_res.xmax;
+
+                            const y_min = curr_res.ymin;
+                            const y_max = curr_res.ymax;
+
+                            const x_min_norm = x_min / 640;
+                            const y_min_norm = y_min / 480;
+
+                            const x_rat = window.innerWidth / 640;
+                            const y_rat = window.innerHeight / 480;
+
+                            const box_width = (x_max-x_min) / 640;
+                            const box_height = (y_max-y_min) / 480;
+
+                            var res_box = document.createElement('a-entity');
+                            res_box.setAttribute('geometry', {
+                                primitive: 'plane',
+                                height: box_height*y_rat,
+                                width: box_width*x_rat
+                            });
+                            res_box.setAttribute('material', {
+                                opacity: 0.5,
+                                transparent: true
+                            });
+                            res_box.object3D.position.set((x_min_norm*x_rat)-1, (y_min_norm*y_rat)-1.5, -3);
+
+
+                            // console.log(x_min_norm*x_rat + " " + x_max_norm*x_rat);
+
+                            var new_el = document.createElement('a-entity');
+                            new_el.setAttribute('text', {
+                                value: curr_res.name,
+                                height: 2,
+                                width: 2
+                            });
+                            new_el.setAttribute('id', "recognition");
+                            new_el.setAttribute('position', { x: 1, y: 0, z: 0 });
+                            res_box.appendChild(new_el);
+                            textElement.appendChild(res_box);
+
+                        }
+                    }
+
+                }
+            };
+            XHR.open("GET", `https://5gwebxr.com:8444/recognition/${client_id}/`);
+            XHR.send();
+        }
+
+        const interval = window.setInterval(function () {
+            console.log("Requesting latest recognition results for self client " + NAF.connection.adapter.clientId);
+            retrieve_recognition(NAF.connection.adapter.clientId)
+        }, 100);
+
+    // clearInterval(interval);
+
+    </script>
+
+
+    <script>
         // Define custom schema for syncing avatar color, set by random-color
         NAF.schemas.add({
             template: '#avatar-template',
@@ -764,8 +864,8 @@
         // Called by Networked-Aframe when connected to server
         function onConnect() {
             console.log("onConnect", new Date());
-        // setTimeout(sendEvents, 3000);
-	}
+            // setTimeout(sendEvents, 3000);
+        }
 
     </script>
 </body>
